@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "serve -s out",
     "lint": "eslint",
     "postbuild": "pagefind --site .next/server/app --output-path out/_pagefind"
   },
@@ -23,6 +23,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "pagefind": "^1.4.0",
+    "serve": "^14.2.5",
     "typescript": "^5"
   }
 }

@@ -1,0 +1,90 @@
+1:"$Sreact.fragment"
+2:I[55169,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/73350e696300078d.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/bd13e8314caa0d32.js"],"TOCProvider"]
+3:I[769,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/73350e696300078d.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/bd13e8314caa0d32.js"],"Sidebar"]
+4:I[47486,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/73350e696300078d.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/bd13e8314caa0d32.js"],"ClientWrapper"]
+9:I[63894,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/73350e696300078d.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/bd13e8314caa0d32.js"],"HeadingAnchor"]
+1a:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/7340adf74ff47ec0.js"],"OutletBoundary"]
+1b:"$Sreact.suspense"
+5:Td5b,---
+sidebar_position: 1
+slug: /
+---
+
+# Introduction
+
+Marlo gives your agent work experience.
+
+Marlo is the learning layer for agents. An agent is your application that uses an LLM to complete user tasks, call tools, and return answers. You keep your agent code and your infrastructure. Marlo watches what the agent does, scores the result, and turns that into guidance the agent can use later.
+
+Marlo does not run your agent. You wrap your agent where it actually executes, and Marlo provides the learning and analysis on top of that execution.
+
+## The Problem We Solve
+In production, agents fail in ways that are hard to see and harder to fix, because the evidence is scattered across logs, prompts, tool calls, and model outputs.
+
+Marlo solves this by creating a single, consistent record of what the agent did, grading that record, and turning the result into guidance you can reuse.
+
+The most common problems look like this:
+- The agent sounds confident while being wrong, which makes errors look like successes.
+- The same mistake happens again because nothing is captured in a reusable way.
+- When a task fails, you cannot prove why it failed or where the mistake happened.
+
+## What Marlo Does
+Marlo adds a learning loop to your existing agent:
+1) **Capture:** Marlo records the full timeline of LLM calls, tool calls, and logs for each task so you have complete evidence.
+2) **Evaluate:** A judge scores the task and explains why, so you get a usable signal instead of just raw logs.
+3) **Learn:** The reward is turned into a learning object that describes what to do in similar situations.
+4) **Apply:** Active learnings are injected into the agent context so the agent improves over time.
+
+## The Flow
+**Do Work** → **Get Graded** → **Learn Lesson** → **Don't Make the Same Mistake Twice.**
+
+## Organization ID And Access
+The platform gives you one organization ID. An organization ID is the unique identifier for your company inside Marlo.
+
+When you sign up and log into the dashboard, the platform creates this organization ID for you. All traces, rewards, learnings, and reports are grouped under this ID. One organization has one organization ID. If someone signs up from a different account, they will get a different organization ID and must attach their agents to that organization separately.
+
+Only members of the same organization ID can see or access the data in that organization. This keeps your agent data private to your team.
+
+## What You Need Before Integration
+You need three things before integration:
+- **Organization ID:** copy it from the dashboard so Marlo knows which organization owns the data.
+- **Write key:** the API key used to send events to Marlo.
+- **Agent definition:** your system prompt, tool definitions, MCP definitions, and model configuration.
+
+## What Marlo Provides
+Marlo gives you everything needed for a full learning loop. You wrap the agent once, and these features run behind the scenes.
+
+**Tracing**
+Stores every LLM call, tool call, and log for each task so you can replay what happened.
+
+**Rewards**
+Scores each task with a clear rationale so you know what went right or wrong.
+
+**Learning**
+Turns rewards into reusable guidance and tracks whether the agent follows it.
+
+**Simulation**
+Replays the same trajectory with different models so you can compare outcomes.
+
+**Reports**
+Summarizes rewards, learnings, and failures so you can make decisions quickly.0:{"buildId":"jlh2X1tjxNDPqLf9oxeRS","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"The Problem We Solve","id":"the-problem-we-solve","depth":2},{"value":"What Marlo Does","id":"what-marlo-does","depth":2},{"value":"The Flow","id":"the-flow","depth":2},{"value":"Organization ID And Access","id":"organization-id-and-access","depth":2},{"value":"What You Need Before Integration","id":"what-you-need-before-integration","depth":2},{"value":"What Marlo Provides","id":"what-marlo-provides","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"sidebar_position":1,"slug":"/","title":"Introduction","filePath":"src/app/page.mdx","timestamp":1767344344000},"sourceCode":"$5","children":["$L6","$L7"]}]]}]}],null,"$L8"]}],"loading":null,"isPartial":false}
+6:["$","div",null,{"id":"nextra-skip-nav"}]
+7:["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Introduction","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Marlo gives your agent work experience."}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Marlo is the learning layer for agents. An agent is your application that uses an LLM to complete user tasks, call tools, and return answers. You keep your agent code and your infrastructure. Marlo watches what the agent does, scores the result, and turns that into guidance the agent can use later."}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Marlo does not run your agent. You wrap your agent where it actually executes, and Marlo provides the learning and analysis on top of that execution."}],"\n",["$","h2",null,{"id":"the-problem-we-solve","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["The Problem We Solve",["$","$L9",null,{"id":"the-problem-we-solve"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"In production, agents fail in ways that are hard to see and harder to fix, because the evidence is scattered across logs, prompts, tool calls, and model outputs."}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Marlo solves this by creating a single, consistent record of what the agent did, grading that record, and turning the result into guidance you can reuse."}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"The most common problems look like this:"}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"The agent sounds confident while being wrong, which makes errors look like successes."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"The same mistake happens again because nothing is captured in a reusable way."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"When a task fails, you cannot prove why it failed or where the mistake happened."}],"\n"]}],"\n",["$","h2",null,{"id":"what-marlo-does","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What Marlo Does",["$","$L9",null,{"id":"what-marlo-does"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Marlo adds a learning loop to your existing agent:"}],"\n",["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Capture:"}]," Marlo records the full timeline of LLM calls, tool calls, and logs for each task so you have complete evidence."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Evaluate:"}]," A judge scores the task and explains why, so you get a usable signal instead of just raw logs."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Learn:"}]," The reward is turned into a learning object that describes what to do in similar situations."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Apply:"}]," Active learnings are injected into the agent context so the agent improves over time."]}],"\n"]}],"\n",["$","h2",null,{"id":"the-flow","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["The Flow","$La"]}],"\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19"]}]
+8:["$","$L1a",null,{"children":["$","$1b",null,{"name":"Next.MetadataOutlet","children":"$@1c"}]}]
+a:["$","$L9",null,{"id":"the-flow"}]
+b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Do Work"}]," → ",["$","strong",null,{"children":"Get Graded"}]," → ",["$","strong",null,{"children":"Learn Lesson"}]," → ",["$","strong",null,{"children":"Don’t Make the Same Mistake Twice."}]]}]
+c:["$","h2",null,{"id":"organization-id-and-access","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Organization ID And Access",["$","$L9",null,{"id":"organization-id-and-access"}]]}]
+d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"The platform gives you one organization ID. An organization ID is the unique identifier for your company inside Marlo."}]
+e:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"When you sign up and log into the dashboard, the platform creates this organization ID for you. All traces, rewards, learnings, and reports are grouped under this ID. One organization has one organization ID. If someone signs up from a different account, they will get a different organization ID and must attach their agents to that organization separately."}]
+f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Only members of the same organization ID can see or access the data in that organization. This keeps your agent data private to your team."}]
+10:["$","h2",null,{"id":"what-you-need-before-integration","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What You Need Before Integration",["$","$L9",null,{"id":"what-you-need-before-integration"}]]}]
+11:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"You need three things before integration:"}]
+12:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Organization ID:"}]," copy it from the dashboard so Marlo knows which organization owns the data."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Write key:"}]," the API key used to send events to Marlo."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Agent definition:"}]," your system prompt, tool definitions, MCP definitions, and model configuration."]}],"\n"]}]
+13:["$","h2",null,{"id":"what-marlo-provides","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What Marlo Provides",["$","$L9",null,{"id":"what-marlo-provides"}]]}]
+14:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Marlo gives you everything needed for a full learning loop. You wrap the agent once, and these features run behind the scenes."}]
+15:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Tracing"}],"\nStores every LLM call, tool call, and log for each task so you can replay what happened."]}]
+16:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Rewards"}],"\nScores each task with a clear rationale so you know what went right or wrong."]}]
+17:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Learning"}],"\nTurns rewards into reusable guidance and tracks whether the agent follows it."]}]
+18:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Simulation"}],"\nReplays the same trajectory with different models so you can compare outcomes."]}]
+19:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Reports"}],"\nSummarizes rewards, learnings, and failures so you can make decisions quickly."]}]
+1c:null

@@ -9,6 +9,7 @@ const withNextra = nextra({
 
 const nextConfig: NextConfig = {
   /* config options here */
+  output: 'export',
   turbopack: {
        resolveAlias: {
          // Path to your `mdx-components` file with extension

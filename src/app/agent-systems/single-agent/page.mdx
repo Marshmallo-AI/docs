@@ -1,0 +1,25 @@
+---
+sidebar_position: 1
+---
+
+# Single Agent
+
+A single agent system is one agent that completes the full task from start to finish. There is no delegation and no handoff to other agents. This is the simplest agentic system that Marlo supports.
+
+![Single agent system diagram](/img/single_agent.png)
+
+How Marlo represents it:
+- One agent definition for the agent.
+- One trace timeline for each task.
+- No parent agent id, because there are no child agents.
+
+What you need to send:
+- The agent definition for the single agent.
+- Task start and task end events for every task.
+- All LLM calls and tool calls produced by this agent.
+
+Where to wrap and send events:
+- Python SDK: `docs/sdk/python`
+- HTTP API: `docs/sdk/http`
+- TypeScript (HTTP): `docs/sdk/typescript`
+

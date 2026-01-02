@@ -1,0 +1,168 @@
+---
+sidebar_position: 2
+---
+
+# TypeScript
+
+There is no TypeScript SDK yet. Use the HTTP API directly from Node/TypeScript.
+This page shows the full, required flow.
+
+Marlo does not run your agent. You only send events and pull learnings.
+
+## Required Data
+You must send these fields on every event:
+
+- `run_id`: session id (number)
+- `agent_id`: stable id for the agent (string)
+- `parent_agent_id`: parent agent id (string or null)
+- `invocation_id`: unique id per run/trace (string UUID)
+- `task_id`: numeric task id (number)
+- `event_type`: one of `agent_start`, `agent_end`, `agent_definition`, `llm_call`, `tool_call`, `log`, `task_start`, `task_end`
+- `payload`: event data (object)
+
+## Endpoints
+All requests use:
+
+- `POST {endpoint}/events` for event batches
+- `POST {endpoint}/learnings` to fetch learning state
+- `Authorization: Bearer <write_key>`
+
+## 1) Send Agent Definition
+Send this once per process start and then daily.
+
+```ts
+const event = {
+  run_id,
+  agent_id: "support-agent",
+  parent_agent_id: null,
+  invocation_id,
+  task_id: null,
+  event_type: "agent_definition",
+  payload: {
+    agent_id: "support-agent",
+    parent_agent_id: null,
+    name: "support-agent",
+    system_prompt: SYSTEM_PROMPT,
+    tool_definitions: TOOL_DEFINITIONS,
+    mcp_definitions: [],
+    model_config: { model: "gpt-4.1-mini" },
+    definition_hash: "sha256-hash",
+  },
+};
+```
+
+## 2) Start A Task
+Each user task must have its own start/end.
+
+```ts
+const taskId = Date.now();
+
+const taskStart = {
+  run_id,
+  agent_id,
+  parent_agent_id: null,
+  invocation_id,
+  task_id: taskId,
+  event_type: "task_start",
+  payload: {
+    task_id: taskId,
+    task: "reset my password",
+    metadata: { user_id: "u_123" },
+  },
+};
+```
+
+## 3) Capture LLM Calls (Required)
+Every model call must be logged with messages, response, usage, and reasoning.
+
+```ts
+const llmEvent = {
+  run_id,
+  agent_id,
+  parent_agent_id: null,
+  invocation_id,
+  task_id: taskId,
+  event_type: "llm_call",
+  payload: {
+    messages,
+    model_params: { model: "gpt-4.1-mini" },
+    response,
+    usage,
+    reasoning, // required if your model returns it
+  },
+};
+```
+
+## 4) Capture Tool Calls (Required)
+Every tool call must be logged with input and output.
+
+```ts
+const toolEvent = {
+  run_id,
+  agent_id,
+  parent_agent_id: null,
+  invocation_id,
+  task_id: taskId,
+  event_type: "tool_call",
+  payload: {
+    tool_name: "get_user_info",
+    input: { user_id: "u_123" },
+    output: { email: "user@example.com" },
+  },
+};
+```
+
+## 5) End The Task
+End each task with status and final answer.
+
+```ts
+const taskEnd = {
+  run_id,
+  agent_id,
+  parent_agent_id: null,
+  invocation_id,
+  task_id: taskId,
+  event_type: "task_end",
+  payload: {
+    task_id: taskId,
+    status: "success",
+    final_answer: "Password reset link sent.",
+  },
+};
+```
+
+## 6) Send Events As A Batch
+```ts
+await fetch(`${endpoint}/events`, {
+  method: "POST",
+  headers: {
+    "Authorization": `Bearer ${writeKey}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify([event, taskStart, llmEvent, toolEvent, taskEnd]),
+});
+```
+
+## 7) Fetch Learnings
+Use your `agent_id` as `learning_key`:
+
+```ts
+const res = await fetch(`${endpoint}/learnings`, {
+  method: "POST",
+  headers: {
+    "Authorization": `Bearer ${writeKey}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ learning_key: "support-agent" }),
+});
+
+const data = await res.json();
+const learningState = data.learning_state || data;
+```
+
+Inject learnings into your system prompt before each run.
+
+## Multi‑Agent Notes
+Each agent gets its own `agent_id` and `agent_definition`.
+Set `parent_agent_id` for child agents so the tree is preserved.
+

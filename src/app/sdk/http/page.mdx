@@ -1,0 +1,133 @@
+---
+sidebar_position: 3
+---
+
+# HTTP API
+
+Use this if you do not want a SDK or you are in a non‑Python runtime.
+
+Marlo only needs two endpoints:
+- `POST {endpoint}/events`
+- `POST {endpoint}/learnings`
+
+All requests require:
+```
+Authorization: Bearer <write_key>
+Content-Type: application/json
+```
+
+## Event Shape
+Every event is a JSON object with this shape:
+
+```json
+{
+  "run_id": 1720000000000,
+  "agent_id": "support-agent",
+  "parent_agent_id": null,
+  "invocation_id": "uuid-123",
+  "task_id": 1720000000000000,
+  "event_type": "llm_call",
+  "payload": {}
+}
+```
+
+## Required Events
+To get rewards and learnings you must send:
+
+- `agent_definition`
+- `task_start`
+- `llm_call`
+- `tool_call`
+- `task_end`
+
+### agent_definition payload
+```json
+{
+  "agent_id": "support-agent",
+  "parent_agent_id": null,
+  "name": "support-agent",
+  "system_prompt": "You are a support agent",
+  "tool_definitions": [],
+  "mcp_definitions": [],
+  "model_config": { "model": "gpt-4.1-mini" },
+  "definition_hash": "sha256-hash"
+}
+```
+
+### task_start payload
+```json
+{
+  "task_id": 1720000000000000,
+  "task": "reset my password",
+  "metadata": { "user_id": "u_123" }
+}
+```
+
+### llm_call payload
+```json
+{
+  "messages": [{ "role": "user", "content": "reset my password" }],
+  "model_params": { "model": "gpt-4.1-mini" },
+  "response": { "text": "Sure, I can help" },
+  "usage": { "prompt_tokens": 12, "completion_tokens": 18, "total_tokens": 30 },
+  "reasoning": { "summary": "User asked for reset. Provide steps." }
+}
+```
+
+### tool_call payload
+```json
+{
+  "tool_name": "get_user_info",
+  "input": { "user_id": "u_123" },
+  "output": { "email": "user@example.com" }
+}
+```
+
+### task_end payload
+```json
+{
+  "task_id": 1720000000000000,
+  "status": "success",
+  "final_answer": "Reset link sent."
+}
+```
+
+## Send Events
+Send a batch of events in one request:
+
+```bash
+curl -X POST "$MARLO_ENDPOINT/events" \
+  -H "Authorization: Bearer $MARLO_WRITE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "run_id": 1720000000000,
+      "agent_id": "support-agent",
+      "parent_agent_id": null,
+      "invocation_id": "uuid-123",
+      "task_id": 1720000000000000,
+      "event_type": "task_start",
+      "payload": { "task_id": 1720000000000000, "task": "reset my password" }
+    }
+  ]'
+```
+
+## Fetch Learnings
+```bash
+curl -X POST "$MARLO_ENDPOINT/learnings" \
+  -H "Authorization: Bearer $MARLO_WRITE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"learning_key":"support-agent"}'
+```
+
+The response returns:
+```json
+{
+  "learning_state": {
+    "learnings_text": "..."
+  }
+}
+```
+
+Inject `learnings_text` into your system prompt before each run.
+

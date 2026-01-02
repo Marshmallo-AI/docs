@@ -1,0 +1,303 @@
+---
+sidebar_position: 1
+---
+
+# Python
+
+This page is the full, end‑to‑end Python integration. If your agent runs in Python, this is the only page you need.
+
+## Install
+```bash
+pip install marlo
+```
+
+## What You Must Provide
+You need these inputs before you start:
+- **Organization ID:** the ID from the dashboard that identifies your organization in Marlo.
+- **Write key:** the API key used to send events to Marlo.
+- **Endpoint:** the Marlo API base URL.
+- **Agent definition:** system prompt, tool definitions, MCP definitions, and model configuration.
+
+## Step 1: Find The Right Wrap Point
+Wrap the function that **actually calls** the agent (the place where you do `invoke` or `ainvoke`).
+
+If you only wrap an HTTP proxy or a router, you will capture nothing because the agent does not run there.
+
+## Step 2: Define Tool Definitions
+Marlo needs a clean list of tools. This is metadata, not tool call logging.
+
+If you already have a tools list, build definitions from it:
+```python
+def _tool_schema(tool):
+    schema = {}
+    if hasattr(tool, "args_schema") and tool.args_schema is not None:
+        try:
+            schema = tool.args_schema.model_json_schema()
+        except Exception:
+            try:
+                schema = tool.args_schema.schema()
+            except Exception:
+                schema = {}
+    return {
+        "name": getattr(tool, "name", None),
+        "description": getattr(tool, "description", None),
+        "schema": schema,
+    }
+
+TOOL_DEFINITIONS = [_tool_schema(t) for t in tools]
+```
+
+If you do not have tool objects, you can pass a manual list:
+```python
+TOOL_DEFINITIONS = [
+    {"name": "search_orders", "description": "lookup orders", "schema": {}},
+]
+```
+
+## Step 3: Initialize Marlo
+Call `marlo.init(...)` once in the same process where the agent runs.
+This registers your agent definition and starts learning refresh.
+
+```python
+import os
+import marlo.learning as marlo
+from marlo.trajectories.capture.context import ExecutionContext
+
+MARLO_ORG_ID = os.getenv("MARLO_ORG_ID", "")
+MARLO_WRITE_KEY = os.getenv("MARLO_WRITE_KEY", "")
+MARLO_ENDPOINT = os.getenv("MARLO_ENDPOINT", "https://api.marshmallo.ai")
+
+if MARLO_ORG_ID and MARLO_WRITE_KEY:
+    ExecutionContext.get().metadata["org_id"] = MARLO_ORG_ID
+    marlo.init(
+        write_key=MARLO_WRITE_KEY,
+        agent_id="support-agent",
+        system_prompt=SYSTEM_PROMPT,
+        tool_definitions=TOOL_DEFINITIONS,
+        mcp_definitions=[],
+        model_config={"model": "gpt-4.1-mini"},
+        endpoint=MARLO_ENDPOINT,
+    )
+```
+
+## Step 4: Wrap The Agent Entrypoint
+Use `@marlo.wrap_agent`. This does **automatic task start/end** and emits agent start/end events.
+
+```python
+@marlo.wrap_agent(
+    name="support_agent",
+    system_prompt=SYSTEM_PROMPT,
+    tool_definitions=TOOL_DEFINITIONS,
+    mcp_definitions=[],
+    model_config={"model": "gpt-4.1-mini"},
+)
+async def run_agent(state, config=None):
+    return await agent.ainvoke(state, config=config)
+```
+
+## Step 5: Capture Tool Calls (Required)
+Tool definitions are not tool usage. Tool usage must be captured at runtime.
+
+Add this inside each tool function:
+```python
+import marlo.learning as marlo
+
+async def get_user_info_fn(config):
+    try:
+        result = await fetch_user_info(config)
+        marlo.track_tool(
+            tool_name="get_user_info",
+            input={"user_id": config.get("user_id")},
+            output=result,
+        )
+        return result
+    except Exception as exc:
+        marlo.track_tool(
+            tool_name="get_user_info",
+            input={"user_id": config.get("user_id")},
+            output=None,
+            error=str(exc),
+        )
+        raise
+```
+
+## Step 6: Capture LLM Calls (Required)
+Every model call must emit a LLM event with messages, response, usage, and reasoning.
+
+```python
+import marlo.learning as marlo
+
+response = await llm.ainvoke(messages)
+
+marlo.track_llm(
+    messages=messages,
+    model="gpt-4.1-mini",
+    response=response,
+    usage=getattr(response, "usage", {}),
+    reasoning=getattr(response, "reasoning", {}),
+)
+```
+
+If your model does not return reasoning, pass `{}` or leave it out. If it **does** return reasoning, you must include it.
+
+## Step 7: Use Learnings In The Next Run
+Marlo can return learnings as plain text. You inject them into your system prompt.
+
+```python
+learnings_text = marlo.get_learnings_text()
+
+SYSTEM_PROMPT = f"""
+You are a support agent.
+
+Learnings:
+{learnings_text}
+"""
+```
+
+You can refresh learnings on a timer or before each task. The hosted client refreshes automatically, and `get_learnings_text()` reads the latest copy.
+
+## Agent Systems
+Marlo supports multiple agentic system layouts. The wiring lives in your code, but the required fields are always the same: agent definitions, parent agent ids for child runs, and full task boundaries. The system structure pages explain the formats in detail:
+- Single agent: `docs/agent-systems/single-agent`
+- Chain: `docs/agent-systems/chain`
+- Orchestrator: `docs/agent-systems/orchestrator`
+- Graph: `docs/agent-systems/graph`
+
+## Full Example: Single Agent (Auth0 Assistant)
+This is a minimal, working example using the Auth0 assistant repo.
+
+File: `app/agents/assistant0.py`
+```python
+from langgraph.prebuilt import ToolNode, create_react_agent
+from langchain_openai import ChatOpenAI
+from datetime import date
+import os
+import marlo.learning as marlo
+
+from app.agents.tools.shop_online import shop_online
+from app.agents.tools.google_calendar import list_upcoming_events
+from app.agents.tools.user_info import get_user_info
+from app.agents.tools.context_docs import get_context_docs
+
+tools = [get_user_info, list_upcoming_events, shop_online, get_context_docs]
+llm = ChatOpenAI(model="gpt-4.1-mini")
+
+def get_prompt():
+    today_str = date.today().strftime('%Y-%m-%d')
+    learnings_text = marlo.get_learnings_text()
+    return (
+        f"You are a personal assistant named Assistant0. "
+        f"Learnings:\n{learnings_text}\n"
+        f"Use the tools as needed. Today is {today_str}."
+    )
+
+def _tool_schema(tool):
+    schema = {}
+    if hasattr(tool, "args_schema") and tool.args_schema is not None:
+        try:
+            schema = tool.args_schema.model_json_schema()
+        except Exception:
+            try:
+                schema = tool.args_schema.schema()
+            except Exception:
+                schema = {}
+    return {
+        "name": getattr(tool, "name", None),
+        "description": getattr(tool, "description", None),
+        "schema": schema,
+    }
+
+TOOL_DEFINITIONS = [_tool_schema(t) for t in tools]
+
+MARLO_WRITE_KEY = os.getenv("MARLO_WRITE_KEY", "")
+MARLO_ENDPOINT = os.getenv("MARLO_ENDPOINT", "https://api.marshmallo.ai")
+
+if MARLO_WRITE_KEY:
+    marlo.init(
+        write_key=MARLO_WRITE_KEY,
+        agent_id="auth0-assistant0",
+        system_prompt=get_prompt(),
+        tool_definitions=TOOL_DEFINITIONS,
+        mcp_definitions=[],
+        model_config={"model": "gpt-4.1-mini"},
+        endpoint=MARLO_ENDPOINT,
+    )
+
+agent = create_react_agent(
+    llm,
+    tools=ToolNode(tools, handle_tool_errors=False),
+    prompt=get_prompt(),
+)
+
+@marlo.wrap_agent(
+    name="assistant0",
+    system_prompt=get_prompt(),
+    tool_definitions=TOOL_DEFINITIONS,
+    mcp_definitions=[],
+    model_config={"model": "gpt-4.1-mini"},
+)
+async def run_agent(state, config=None):
+    return await agent.ainvoke(state, config=config)
+```
+
+Update `langgraph.json` to point to `run_agent`:
+```json
+{
+  "graphs": {
+    "agent": "./app/agents/assistant0.py:run_agent"
+  }
+}
+```
+
+## Multi‑Agent Example
+When you have multiple agents, each one must be defined and wrapped.
+Use a stable `agent_id` for each agent. If you know the parent/child relationship, set `parent_agent_id`.
+
+```python
+PARENT_ID = "support-root"
+CHILD_ID = "support-search"
+
+@marlo.wrap_agent(
+    name="support_root",
+    system_prompt=PARENT_PROMPT,
+    tool_definitions=PARENT_TOOLS,
+    mcp_definitions=[],
+    model_config={"model": "gpt-4.1-mini"},
+)
+async def run_root(task: str):
+    result = await run_search(task)
+    return result
+
+@marlo.wrap_agent(
+    name="support_search",
+    system_prompt=SEARCH_PROMPT,
+    tool_definitions=SEARCH_TOOLS,
+    mcp_definitions=[],
+    model_config={"model": "gpt-4.1-mini"},
+    parent_agent_id=PARENT_ID,
+)
+async def run_search(task: str):
+    return await search_agent.ainvoke({"input": task})
+```
+
+If you need a dynamic parent at runtime, wrap the sub‑agent call in `trace_agent`:
+```python
+with marlo.trace_agent(
+    name="support_search",
+    system_prompt=SEARCH_PROMPT,
+    tool_definitions=SEARCH_TOOLS,
+    mcp_definitions=[],
+    model_config={"model": "gpt-4.1-mini"},
+    parent_agent_id=marlo.get_current_agent_id(),
+):
+    result = await search_agent.ainvoke({"input": task})
+```
+
+## Checklist
+- Organization ID is set before `marlo.init(...)`
+- Agent entrypoint is wrapped with `@marlo.wrap_agent`
+- All tool calls emit `track_tool`
+- All LLM calls emit `track_llm`
+- `marlo.init(...)` runs in the same process as the agent
+- System prompt includes learnings
+

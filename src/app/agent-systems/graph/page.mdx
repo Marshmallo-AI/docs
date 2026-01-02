@@ -1,0 +1,27 @@
+---
+sidebar_position: 4
+---
+
+# Graph
+
+A graph system is a flexible workflow where agents can connect in many directions, not just in a straight line. You define the connections between agents explicitly, and the system can include branches, merges, and feedback loops. This is a supported agentic system in Marlo.
+
+![Graph agent system diagram](/img/graph.png)
+
+How Marlo represents it:
+- The system stores the agent list and the explicit edges between agents.
+- The trace can show branching, merging, and repeated calls between agents.
+- Parent agent ids still exist for each agent run, but the system edges describe the overall map.
+
+What you need to send:
+- Agent definitions for every agent in the graph.
+- Agent start and agent end events for each agent run.
+- Parent agent ids for each agent run.
+- The system map (agents and edges) so Marlo can render the full graph.
+- Task start and task end events, plus all LLM and tool calls.
+
+Where to wrap and send events:
+- Python SDK: `docs/sdk/python`
+- HTTP API: `docs/sdk/http`
+- TypeScript (HTTP): `docs/sdk/typescript`
+

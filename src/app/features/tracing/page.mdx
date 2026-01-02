@@ -1,0 +1,70 @@
+---
+sidebar_position: 1
+---
+
+# Tracing
+
+Tracing is the raw data layer. It records what your agent did, in the exact order it happened.
+
+Marlo does not infer or guess. If an event is not captured, it does not exist in the trace.
+
+## What Tracing Captures
+For every task, Marlo stores a full sequence of events:
+
+- `agent_definition`: system prompt, tools, MCP servers, model config
+- `task_start`: task text and metadata
+- `llm_call`: messages, model params, response, usage, reasoning
+- `tool_call`: tool name, input, output, error
+- `log`: any extra metadata you want to attach
+- `task_end`: status and final answer
+
+Each event also includes:
+- `agent_id`: the agent that produced the event
+- `parent_agent_id`: the parent agent, if this is a sub‑agent
+- `invocation_id`: trace id for the run
+- `run_id`: session id
+- `task_id`: task id inside the session
+
+This is enough to rebuild the agent tree and the full timeline for every task.
+
+## Why Tracing Is Required
+Rewards and learning are built from traces. If you skip tool calls or LLM calls, the judge sees an incomplete picture and the learning quality drops.
+
+So these are mandatory:
+- `llm_call` for every model call
+- `tool_call` for every tool call
+
+## Agent Definition Is Not Optional
+Marlo needs the full agent definition to judge and learn correctly:
+- The system prompt gives the policy context
+- Tool definitions explain what tools exist and how to use them
+- MCP definitions show external resources
+- Model config ties outcomes to a specific model
+
+Without this, rewards and learnings will be wrong or incomplete.
+
+## Single Agent vs Multi‑Agent
+Tracing works for one agent or many agents.
+
+For multi‑agent systems:
+- Each agent emits its own events
+- Each agent registers its own definition
+- `parent_agent_id` links sub‑agents to the root
+
+Marlo rebuilds the full tree from these ids.
+
+## Task Boundaries
+Each user task must be wrapped in a `task_start` and `task_end`.
+This is how Marlo produces task‑level rewards.
+
+If you only send a session‑level boundary, Marlo cannot score tasks.
+
+## Reasoning Data
+If your model returns reasoning, send it in `llm_call.reasoning`.
+If it does not, send an empty object. The system should not crash.
+
+## Where Tracing Happens
+Tracing must run in the same process where the agent executes.
+
+If you wrap a proxy or a router, you will not capture any real events.
+

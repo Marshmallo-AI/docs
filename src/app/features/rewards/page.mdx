@@ -1,0 +1,52 @@
+---
+sidebar_position: 2
+---
+
+# Rewards
+
+Rewards are task‑level evaluations of what happened in a trace.
+They answer one question: **did this task succeed, and why?**
+
+## What The Judge Sees
+For each task, the judge reads:
+- the task text
+- all task events (LLM calls, tool calls, logs)
+- the final answer
+- the agent definition (system prompt, tools, MCP, model config)
+- the agent tree (root + sub‑agents)
+
+If any of these are missing, the reward is less reliable.
+
+## What The Judge Returns
+Rewards include:
+- a score (numeric)
+- a rationale (why it scored that way)
+- principles (what was good or bad)
+- uncertainty (how confident the judge is)
+
+This output is stored with the task and used by learning.
+
+## Task‑Level Only
+Rewards are generated per task, not per session.
+A session can contain 100 tasks. Each task must be scored separately.
+
+That is why `task_start` and `task_end` are required.
+
+## Long Tasks And Memory
+If a task is too large to fit in the judge context:
+- Marlo compresses the trajectory into a memory summary
+- The judge reads the summary instead of full events
+
+This keeps scoring stable even on very long tasks.
+
+## Reasoning Usage
+If your model provides reasoning, include it in `llm_call.reasoning`.
+The judge will use it as evidence when it is available.
+
+If it is not available, the judge still runs, but with less signal.
+
+## When Rewards Run
+Rewards run after a task ends and you run the reward pipeline.
+
+Reward runs never crash the agent. Errors are stored as metadata.
+

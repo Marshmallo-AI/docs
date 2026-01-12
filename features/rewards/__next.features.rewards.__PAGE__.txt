@@ -2,77 +2,8 @@
 2:I[55169,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"TOCProvider"]
 3:I[769,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"Sidebar"]
 4:I[47486,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"ClientWrapper"]
-6:I[63894,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"HeadingAnchor"]
-1a:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/7340adf74ff47ec0.js"],"OutletBoundary"]
-1b:"$Sreact.suspense"
-5:T5e7,---
-sidebar_position: 2
----
-
-# Rewards
-
-Rewards are task‑level evaluations of what happened in a trace.
-They answer one question: **did this task succeed, and why?**
-
-## What The Judge Sees
-For each task, the judge reads:
-- the task text
-- all task events (LLM calls, tool calls, logs)
-- the final answer
-- the agent definition (system prompt, tools, MCP, model config)
-- the agent tree (root + sub‑agents)
-
-If any of these are missing, the reward is less reliable.
-
-## What The Judge Returns
-Rewards include:
-- a score (numeric)
-- a rationale (why it scored that way)
-- principles (what was good or bad)
-- uncertainty (how confident the judge is)
-
-This output is stored with the task and used by learning.
-
-## Task‑Level Only
-Rewards are generated per task, not per session.
-A session can contain 100 tasks. Each task must be scored separately.
-
-That is why `task_start` and `task_end` are required.
-
-## Long Tasks And Memory
-If a task is too large to fit in the judge context:
-- Marlo compresses the trajectory into a memory summary
-- The judge reads the summary instead of full events
-
-This keeps scoring stable even on very long tasks.
-
-## Reasoning Usage
-If your model provides reasoning, include it in `llm_call.reasoning`.
-The judge will use it as evidence when it is available.
-
-If it is not available, the judge still runs, but with less signal.
-
-## When Rewards Run
-Rewards run after a task ends and you run the reward pipeline.
-
-Reward runs never crash the agent. Errors are stored as metadata.0:{"buildId":"wrVKmalm7spyZDZ7lPwrU","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"What The Judge Sees","id":"what-the-judge-sees","depth":2},{"value":"What The Judge Returns","id":"what-the-judge-returns","depth":2},{"value":"Task‑Level Only","id":"tasklevel-only","depth":2},{"value":"Long Tasks And Memory","id":"long-tasks-and-memory","depth":2},{"value":"Reasoning Usage","id":"reasoning-usage","depth":2},{"value":"When Rewards Run","id":"when-rewards-run","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"sidebar_position":2,"title":"Rewards","filePath":"src/app/features/rewards/page.mdx","timestamp":1767344856000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Rewards","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Rewards are task‑level evaluations of what happened in a trace.\nThey answer one question: ",["$","strong",null,{"children":"did this task succeed, and why?"}]]}],"\n",["$","h2",null,{"id":"what-the-judge-sees","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What The Judge Sees",["$","$L6",null,{"id":"what-the-judge-sees"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"For each task, the judge reads:"}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"the task text"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"all task events (LLM calls, tool calls, logs)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"the final answer"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"the agent definition (system prompt, tools, MCP, model config)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"the agent tree (root + sub‑agents)"}],"\n"]}],"\n","$L7","\n","$L8","\n","$L9","\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18"]}]]}]]}]}],null,"$L19"]}],"loading":null,"isPartial":false}
-7:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"If any of these are missing, the reward is less reliable."}]
-8:["$","h2",null,{"id":"what-the-judge-returns","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What The Judge Returns",["$","$L6",null,{"id":"what-the-judge-returns"}]]}]
-9:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Rewards include:"}]
-a:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"a score (numeric)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"a rationale (why it scored that way)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"principles (what was good or bad)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"uncertainty (how confident the judge is)"}],"\n"]}]
-b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"This output is stored with the task and used by learning."}]
-c:["$","h2",null,{"id":"tasklevel-only","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Task‑Level Only",["$","$L6",null,{"id":"tasklevel-only"}]]}]
-d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Rewards are generated per task, not per session.\nA session can contain 100 tasks. Each task must be scored separately."}]
-e:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["That is why ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"task_start"}]," and ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"task_end"}]," are required."]}]
-f:["$","h2",null,{"id":"long-tasks-and-memory","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Long Tasks And Memory",["$","$L6",null,{"id":"long-tasks-and-memory"}]]}]
-10:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"If a task is too large to fit in the judge context:"}]
-11:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Marlo compresses the trajectory into a memory summary"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"The judge reads the summary instead of full events"}],"\n"]}]
-12:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"This keeps scoring stable even on very long tasks."}]
-13:["$","h2",null,{"id":"reasoning-usage","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Reasoning Usage",["$","$L6",null,{"id":"reasoning-usage"}]]}]
-14:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["If your model provides reasoning, include it in ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"llm_call.reasoning"}],".\nThe judge will use it as evidence when it is available."]}]
-15:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"If it is not available, the judge still runs, but with less signal."}]
-16:["$","h2",null,{"id":"when-rewards-run","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["When Rewards Run",["$","$L6",null,{"id":"when-rewards-run"}]]}]
-17:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Rewards run after a task ends and you run the reward pipeline."}]
-18:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Reward runs never crash the agent. Errors are stored as metadata."}]
-19:["$","$L1a",null,{"children":["$","$1b",null,{"name":"Next.MetadataOutlet","children":"$@1c"}]}]
-1c:null
+5:I[63894,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"HeadingAnchor"]
+6:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/7340adf74ff47ec0.js"],"OutletBoundary"]
+7:"$Sreact.suspense"
+0:{"buildId":"mHVec-0yUCaJha4mJQXhU","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"What Rewards Need","id":"what-rewards-need","depth":2},{"value":"What You Get","id":"what-you-get","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"sidebar_position":2,"title":"Rewards","filePath":"src/app/features/rewards/page.mdx","timestamp":1768254454000},"sourceCode":"---\nsidebar_position: 2\n---\n\n# Rewards\n\nRewards turn a completed task into a score and explanation. They tell you what worked, what failed, and why.\n\n## What Rewards Need\nTo score a task, Marlo needs a full trace:\n- Task input and output\n- LLM calls\n- Tool calls\n- Agent definition\n\n## What You Get\n- A numeric score\n- A short rationale\n- Evidence linked to the exact steps in the trace\n\nRewards are computed automatically once a task ends.","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Rewards","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Rewards turn a completed task into a score and explanation. They tell you what worked, what failed, and why."}],"\n",["$","h2",null,{"id":"what-rewards-need","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What Rewards Need",["$","$L5",null,{"id":"what-rewards-need"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"To score a task, Marlo needs a full trace:"}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Task input and output"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"LLM calls"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Tool calls"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Agent definition"}],"\n"]}],"\n",["$","h2",null,{"id":"what-you-get","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What You Get",["$","$L5",null,{"id":"what-you-get"}]]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"A numeric score"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"A short rationale"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Evidence linked to the exact steps in the trace"}],"\n"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Rewards are computed automatically once a task ends."}]]}]]}]]}]}],null,["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
+8:null

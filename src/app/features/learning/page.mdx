@@ -2,68 +2,15 @@
 sidebar_position: 3
 ---
 
-# Learning
+# Learnings
 
-Learning turns reward rationales into stable, reusable guidance for the agent.
-The goal is simple: **reduce failures and keep decisions consistent**.
+Learnings are reusable guidance generated from rewards. They summarize what to do (or avoid) in similar situations.
 
-## Inputs To Learning
-Learning runs after rewards. It uses:
-- task reward output (score + rationale + principles)
-- task trajectory context (same task the judge saw)
-- agent definition (system prompt and tools)
+## How Learnings Work
+1) A task completes.
+2) A reward grades the outcome.
+3) Marlo generates a learning object from the trace and score.
+4) Active learnings are surfaced for the next run.
 
-Learning never runs on guesses. It only uses what was actually captured.
-
-## What A Learning Is
-Each learning is stored as a small, structured rule:
-
-- **cue**: what to detect in the task or context
-- **action**: what the agent should do
-- **expected effect**: why this helps
-
-This format makes learnings easy to apply and to measure.
-
-## Shadow vs Active
-Learnings start in **shadow**:
-- they are tracked
-- they are not injected into the prompt
-
-When a learning proves useful over time, it moves to **active**:
-- it is injected into the prompt
-- its adoption and outcomes are tracked
-
-If it harms performance, it can be demoted back to shadow.
-
-## How We Know A Learning Works
-Marlo tracks adoption and outcomes:
-- did the agent follow the learning?
-- did reward scores improve?
-- did failures drop?
-
-If adoption is low or outcomes degrade, the learning is removed or demoted.
-
-## Where Learnings Live
-Learnings are stored per agent (using `learning_key`, usually the `agent_id`).
-That means each agent has its own learning set.
-
-In multi‑agent systems, each agent has separate learnings.
-
-## How Learnings Are Used
-The SDK returns learnings as text.
-You inject them into your system prompt.
-
-Example:
-```python
-learnings_text = marlo.get_learnings_text()
-
-SYSTEM_PROMPT = f"""
-You are a support agent.
-
-Learnings:
-{learnings_text}
-"""
-```
-
-If you do not inject learnings, they exist but they do not affect the agent.
-
+## Using Learnings
+The SDK can return learnings as plain text for prompt injection. You decide where to place them in your system prompt or context.

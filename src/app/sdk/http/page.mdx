@@ -4,9 +4,9 @@ sidebar_position: 3
 
 # HTTP API
 
-Use this if you do not want a SDK or you are in a non‑Python runtime.
+Use this if you do not want an SDK or you are in a non-Python runtime.
 
-Marlo only needs two endpoints:
+## Endpoints
 - `POST {endpoint}/events`
 - `POST {endpoint}/learnings`
 
@@ -17,7 +17,7 @@ Content-Type: application/json
 ```
 
 ## Event Shape
-Every event is a JSON object with this shape:
+Each event is a JSON object with the same top-level shape:
 
 ```json
 {
@@ -32,8 +32,7 @@ Every event is a JSON object with this shape:
 ```
 
 ## Required Events
-To get rewards and learnings you must send:
-
+To receive rewards and learnings, send:
 - `agent_definition`
 - `task_start`
 - `llm_call`
@@ -49,7 +48,7 @@ To get rewards and learnings you must send:
   "system_prompt": "You are a support agent",
   "tool_definitions": [],
   "mcp_definitions": [],
-  "model_config": { "model": "gpt-4.1-mini" },
+  "model_config": { "model": "gpt-4" },
   "definition_hash": "sha256-hash"
 }
 ```
@@ -59,7 +58,7 @@ To get rewards and learnings you must send:
 {
   "task_id": 1720000000000000,
   "task": "reset my password",
-  "metadata": { "user_id": "u_123" }
+  "metadata": { "thread_id": "conversation-123", "thread_name": "Password Reset" }
 }
 ```
 
@@ -67,10 +66,10 @@ To get rewards and learnings you must send:
 ```json
 {
   "messages": [{ "role": "user", "content": "reset my password" }],
-  "model_params": { "model": "gpt-4.1-mini" },
+  "model_params": { "model": "gpt-4" },
   "response": { "text": "Sure, I can help" },
   "usage": { "prompt_tokens": 12, "completion_tokens": 18, "total_tokens": 30 },
-  "reasoning": { "summary": "User asked for reset. Provide steps." }
+  "reasoning": { "summary": "Provide reset steps" }
 }
 ```
 
@@ -128,6 +127,3 @@ The response returns:
   }
 }
 ```
-
-Inject `learnings_text` into your system prompt before each run.
-

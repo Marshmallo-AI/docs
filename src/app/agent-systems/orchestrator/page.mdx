@@ -1,26 +1,12 @@
 ---
-sidebar_position: 3
+sidebar_position: 2
 ---
 
 # Orchestrator
 
-An orchestrator system has one root agent that coordinates the task and delegates work to several specialized agents. The root agent decides which sub‑agent to call, collects their outputs, and produces the final response. This is a supported agentic system in Marlo.
+An orchestrator has one root agent that delegates work to specialist agents and then produces the final response.
 
 ![Orchestrator agent system diagram](/img/orchestrator.png)
 
-How Marlo represents it:
-- One agent is the entry agent (the orchestrator).
-- Each sub‑agent is linked to the orchestrator with a parent agent id.
-- The trace shows which sub‑agent ran, what it returned, and how the orchestrator finished the task.
-
-What you need to send:
-- Agent definitions for the orchestrator and every sub‑agent.
-- Agent start and agent end events for each agent run.
-- Parent agent ids that connect sub‑agents to the orchestrator.
-- Task start and task end events, plus all LLM and tool calls.
-
-Where to wrap and send events:
-- Python SDK: `docs/sdk/python`
-- HTTP API: `docs/sdk/http`
-- TypeScript (HTTP): `docs/sdk/typescript`
-
+## How to Track It
+Use `task.child()` for each delegated agent run. The SDK links child traces to the parent automatically.

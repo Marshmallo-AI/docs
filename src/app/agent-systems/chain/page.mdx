@@ -1,25 +1,12 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 ---
 
 # Chain
 
-A chain system is a linear flow where one agent hands off to the next agent. Each agent has exactly one parent, and the work moves in a single direction from the first agent to the last agent. This is a supported agentic system in Marlo.
+A chain system is a linear flow where one agent hands off to the next.
 
 ![Chain agent system diagram](/img/chain.png)
 
-How Marlo represents it:
-- Each agent has its own agent definition.
-- Each child agent has a parent agent id that points to the agent that called it.
-- The trace shows a clear handoff order from the root agent to the final agent.
-
-What you need to send:
-- Agent definitions for every agent in the chain.
-- Agent start and agent end events for each agent run.
-- Parent agent ids on child agents so the chain can be rebuilt.
-- Task start and task end events, plus all LLM and tool calls.
-
-Where to wrap and send events:
-- Python SDK: `docs/sdk/python`
-- HTTP API: `docs/sdk/http`
-- TypeScript (HTTP): `docs/sdk/typescript`
+## How to Track It
+Create a parent task and use `task.child()` for each step in the chain to preserve order and lineage.

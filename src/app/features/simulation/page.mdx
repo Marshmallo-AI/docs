@@ -1,37 +1,14 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 # Simulation
 
-Simulation lets you replay the **same captured trajectory** with different models.
-This gives you a clean, apples‑to‑apples comparison.
+Simulation replays the same task with different models or settings. It helps you compare outcomes without changing production traffic.
 
-## What Simulation Uses
-Simulation does not generate new tasks. It uses:
-- existing task trajectories
-- the same tool calls and tool outputs
-- the same user messages
-- the same agent definitions
+## What You Can Do
+- Re-run a trace with a new model
+- Compare outputs side-by-side
+- Measure reward changes across model choices
 
-Only the model changes.
-
-## Why It Matters
-When you compare models on live traffic, the tasks are different.
-That makes it hard to know which model is better.
-
-Simulation removes that noise.
-You can compare model quality and cost on the exact same data.
-
-## What It Produces
-For each candidate model, simulation produces:
-- model response
-- reward score
-- differences vs the original model
-
-This helps you decide which model to promote.
-
-## What It Does Not Do
-Simulation does not affect production runs.
-It only reads stored trajectories and writes evaluation results.
-
+Simulation uses existing traces, so you can evaluate changes without new data collection.

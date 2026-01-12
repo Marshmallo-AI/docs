@@ -5,59 +5,23 @@ slug: /
 
 # Introduction
 
-Marlo gives your agent work experience.
-
-Marlo is the learning layer for agents. An agent is your application that uses an LLM to complete user tasks, call tools, and return answers. You keep your agent code and your infrastructure. Marlo watches what the agent does, scores the result, and turns that into guidance the agent can use later.
-
-Marlo does not run your agent. You wrap your agent where it actually executes, and Marlo provides the learning and analysis on top of that execution.
-
-## The Problem We Solve
-In production, agents fail in ways that are hard to see and harder to fix, because the evidence is scattered across logs, prompts, tool calls, and model outputs.
-
-Marlo solves this by creating a single, consistent record of what the agent did, grading that record, and turning the result into guidance you can reuse.
-
-The most common problems look like this:
-- The agent sounds confident while being wrong, which makes errors look like successes.
-- The same mistake happens again because nothing is captured in a reusable way.
-- When a task fails, you cannot prove why it failed or where the mistake happened.
+Marlo is the learning layer for agent runs. You keep your agent code and infrastructure. Marlo records what the agent did, scores the outcome, and turns that result into guidance the agent can use later.
 
 ## What Marlo Does
-Marlo adds a learning loop to your existing agent:
-1) **Capture:** Marlo records the full timeline of LLM calls, tool calls, and logs for each task so you have complete evidence.
-2) **Evaluate:** A judge scores the task and explains why, so you get a usable signal instead of just raw logs.
-3) **Learn:** The reward is turned into a learning object that describes what to do in similar situations.
-4) **Apply:** Active learnings are injected into the agent context so the agent improves over time.
+Marlo adds a feedback loop on top of your existing agent:
+- **Capture** the full timeline of model calls, tool calls, and outputs.
+- **Score** each task with a clear rationale.
+- **Learn** from the result and store it as guidance.
+- **Apply** active learnings to future runs.
 
-## The Flow
-**Do Work** → **Get Graded** → **Learn Lesson** → **Don't Make the Same Mistake Twice.**
+## Why It Matters
+In production, failures are hard to debug because the evidence is scattered across logs, prompts, and tool outputs. Marlo gives you a single, consistent record of what happened so you can grade outcomes and improve reliably.
 
-## Organization ID And Access
-The platform gives you one organization ID. An organization ID is the unique identifier for your company inside Marlo.
+## What You Send
+Marlo needs a small, stable set of data for every task:
+- Agent definition (system prompt, tools, MCP, model config)
+- Task input and output
+- LLM calls and tool calls
+- Task status
 
-When you sign up and log into the dashboard, the platform creates this organization ID for you. All traces, rewards, learnings, and reports are grouped under this ID. One organization has one organization ID. If someone signs up from a different account, they will get a different organization ID and must attach their agents to that organization separately.
-
-Only members of the same organization ID can see or access the data in that organization. This keeps your agent data private to your team.
-
-## What You Need Before Integration
-You need three things before integration:
-- **Organization ID:** copy it from the dashboard so Marlo knows which organization owns the data.
-- **Write key:** the API key used to send events to Marlo.
-- **Agent definition:** your system prompt, tool definitions, MCP definitions, and model configuration.
-
-## What Marlo Provides
-Marlo gives you everything needed for a full learning loop. You wrap the agent once, and these features run behind the scenes.
-
-**Tracing**
-Stores every LLM call, tool call, and log for each task so you can replay what happened.
-
-**Rewards**
-Scores each task with a clear rationale so you know what went right or wrong.
-
-**Learning**
-Turns rewards into reusable guidance and tracks whether the agent follows it.
-
-**Simulation**
-Replays the same trajectory with different models so you can compare outcomes.
-
-**Reports**
-Summarizes rewards, learnings, and failures so you can make decisions quickly.
+The SDK handles the plumbing and keeps telemetry best-effort so your agent never breaks if Marlo is down.

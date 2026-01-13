@@ -3,25 +3,31 @@ sidebar_position: 1
 slug: /
 ---
 
-# Introduction
+# Introduction to Marlo
 
-Marlo is the learning layer for agent runs. You keep your agent code and infrastructure. Marlo records what the agent did, scores the outcome, and turns that result into guidance the agent can use later.
+Marlo is the agent learning platform by Marshmallow. 
 
-## What Marlo Does
-Marlo adds a feedback loop on top of your existing agent:
-- **Capture** the full timeline of model calls, tool calls, and outputs.
-- **Score** each task with a clear rationale.
-- **Learn** from the result and store it as guidance.
-- **Apply** active learnings to future runs.
+## The Problem: Silent Agent Failures in Production
+In production, agents fail in ways that are hard to see and harder to fix, because the evidence is scattered across logs, prompts, tool calls, and model outputs, with no single place to understand what actually happened.
 
-## Why It Matters
-In production, failures are hard to debug because the evidence is scattered across logs, prompts, and tool outputs. Marlo gives you a single, consistent record of what happened so you can grade outcomes and improve reliably.
+Marlo solves this by creating a single, consistent record of what the agent did, grading that record, and turning the result into guidance you can reuse.
 
-## What You Send
-Marlo needs a small, stable set of data for every task:
-- Agent definition (system prompt, tools, MCP, model config)
-- Task input and output
-- LLM calls and tool calls
-- Task status
+The most common failure modes include:
+- The agent produces confident-looking output that is incorrect, making failures appear successful.
+- The same mistakes repeat because failures are not captured in a reusable or actionable form.
+- When a task fails, it is difficult or impossible to determine where the failure occurred or why it happened.
 
-The SDK handles the plumbing and keeps telemetry best-effort so your agent never breaks if Marlo is down.
+## The Solution: A Learning Loop for Production Agents
+Marlo solves silent agent failures by adding a persistent learning loop to existing agent systems. Instead of relying on scattered logs and manual debugging, Marlo continuously captures evidence, evaluates outcomes, and feeds lessons back into the agent at runtime.
+
+The learning loop consists of four stages:
+1) **Capture:** Marlo records the complete execution timeline for each task, including LLM calls, tool calls, and logs, creating a single source of truth for agent behavior.
+2) **Evaluate:** A judge scores the task outcome and explains the reasoning behind the score, turning raw execution data into a structured evaluation signal.
+3) **Learn:** Evaluation results are converted into learning objects that describe how the agent should behave in similar situations in the future.
+4) **Apply:** Active learnings are injected into the agent’s context at runtime, allowing behavior to improve automatically over time.
+
+## The Feedback Loop
+**Capturing of Agent Trajectories** → **Reward System** → **Learning System** → **Genrated Learning
+.**
+
+

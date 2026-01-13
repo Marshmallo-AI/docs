@@ -3,6 +3,7 @@ import { Head } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 import 'nextra-theme-docs/style.css'
 import { ReactNode } from 'react'
+import type { PageMapItem } from 'nextra'
  
 export const metadata = {
   // Define your metadata here
@@ -17,20 +18,14 @@ const navbar = (
 )
 const footer = <Footer>MIT {new Date().getFullYear()} © Marshmallo.ai.</Footer>
  
-type PageMapItem = {
-  name?: string
-  route?: string
-  children?: PageMapItem[]
-}
-
 const rootOrder = ['index', 'page', 'getting-started', 'sdk', 'features', 'agent-systems']
 const sdkOrder = ['page', 'python', 'typescript', 'http']
 const featuresOrder = ['page', 'tracing', 'rewards', 'learning', 'copilot', 'simulation', 'reports']
 const agentSystemsOrder = ['page', 'single-agent', 'orchestrator', 'chain', 'graph']
 
 const toKey = (item: PageMapItem) => {
-  if (item.name) return item.name
-  if (item.route) {
+  if ('name' in item && item.name) return item.name
+  if ('route' in item && item.route) {
     const parts = item.route.split('/').filter(Boolean)
     return parts[parts.length - 1] || item.route
   }
@@ -52,7 +47,7 @@ const sortItems = (items: PageMapItem[], order: string[]) => {
 const reorderPageMap = (items: PageMapItem[]): PageMapItem[] => {
   const sorted = sortItems(items, rootOrder).map((item) => {
     const key = toKey(item)
-    if (!item.children || item.children.length === 0) return item
+    if (!('children' in item) || !item.children || item.children.length === 0) return item
     if (key === 'sdk') {
       return { ...item, children: sortItems(item.children, sdkOrder) }
     }

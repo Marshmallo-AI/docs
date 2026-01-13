@@ -12,18 +12,29 @@ To get started with Marlo, create an account on our platform.
 
 Click **Get Started**, create your account, then set up an organization and a project.
 
-## Create a project
-A project represents one agentic system. If you have multiple agentic systems, create one project per system. Each project has its own API key.
+## Create a project and get your API key
 
-## Add your API key
-Copy the API key and add it to your `.env`.
+Follow these steps to create a project and obtain your API key:
 
-## Install the SDK
+1. **Create a project**  
+   - Navigate to your dashboard and click **Create Project**.  
+   - A project represents a single agentic system. If you have multiple agentic systems, create one project per system.  
 
-> **Note:**  
-> TypeScript and other language SDKs will be supported soon.
+2. **Access your API key**  
+   - Go to **Settings > Project** for the project you just created.  
+   - Copy the API key displayed on this page.  
 
-For Python:
-```bash
-pip install marlo
-```
+3. **Add the API key to your environment**  
+   - Open your `.env` file in your local project.  
+   - Add the following line:  
+     ```bash
+     MARLO_API_KEY=your_api_key_here
+     ```  
+   - Save the file.  
+
+4. **Install the Python SDK**  
+   - In your terminal, run:  
+     ```bash
+     pip install marlo
+     ```  
+   - > **Note:** Currently, Marlo supports **Python only**. TypeScript and other language SDKs are coming soon.

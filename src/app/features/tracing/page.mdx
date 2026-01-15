@@ -4,19 +4,54 @@ sidebar_position: 1
 
 # Tracing
 
-Tracing is the raw record of what your agent did. Every model call, tool call, and output is captured in order so you can replay the run later.
+Tracing is the foundation of Marlo. It captures everything your agent does during a task, creating a complete record that powers rewards, learnings, and debugging.
+
+## Why Tracing Matters
+
+Without tracing, agent failures are invisible. You might see a bad output, but you cannot tell which step caused it, what the model was thinking, or what data the tools returned. Tracing solves this by recording every action in order, so you can replay the entire run and pinpoint exactly where things went wrong.
+
+Tracing also enables Marlo's learning loop. Rewards are computed from traces. Learnings are generated from rewards. Without complete traces, the system cannot evaluate outcomes or generate useful guidance.
 
 ## What Tracing Captures
-For each task, Marlo stores:
-- Agent definition
-- Task input and output
-- LLM calls (messages, model, response, usage)
-- Tool calls (name, input, output, error)
-- Logs and metadata
-- Task status
 
-## Why It Matters
-Rewards and learnings are built from traces. Missing events reduce the quality of scoring and the guidance you get back.
+For each task, Marlo records:
 
-## Fail-Safe Behavior
-Tracing is best-effort. If Marlo is down, your agent continues running and telemetry is skipped.
+1. **Agent Definition**: The system prompt, available tools, and model configuration for the agent handling the task.
+
+2. **Task Input**: The user request or message that started the task.
+
+3. **LLM Calls**: Every call to a language model, including the messages sent, the model used, the response returned, and token usage.
+
+4. **Tool Calls**: Every tool invocation, including the tool name, input arguments, output result, and any errors.
+
+5. **Reasoning**: Internal chain-of-thought or reasoning steps recorded by the agent.
+
+6. **Task Output**: The final response returned to the user.
+
+7. **Task Status**: Whether the task completed successfully or failed with an error.
+
+## How Tracing Works
+
+Tracing happens automatically when you use the SDK:
+
+1. You wrap your agent logic in a `marlo.task()` context.
+2. Inside the context, you call methods like `task.input()`, `task.llm()`, `task.tool()`, and `task.output()`.
+3. Each method records an event with a timestamp and the data you provide.
+4. When the context exits, all events are sent to Marlo as a batch.
+
+Events are linked together by a shared session ID (derived from your thread ID) and a unique task ID. This allows Marlo to group related events and reconstruct the full execution timeline.
+
+## Viewing Traces in the Dashboard
+
+Once events are sent, you can view the trace in the Marlo dashboard:
+
+1. Navigate to your project.
+2. Select a thread from the list to see all tasks in that conversation.
+3. Click on a task to see the full trace, including every LLM call, tool call, and the final output.
+4. Expand individual events to see details like token usage, model parameters, and tool outputs.
+
+The dashboard displays events in chronological order, making it easy to follow the agent's decision-making process from start to finish.
+
+## Multi-Agent Tracing
+
+For systems with multiple agents, Marlo traces each agent separately while preserving the parent-child relationship. When you use `task.child()` to delegate to a sub-agent, the child's events are linked to the parent task. This creates a hierarchy in the dashboard, showing how the orchestrator delegated work and how each agent contributed to the final result.

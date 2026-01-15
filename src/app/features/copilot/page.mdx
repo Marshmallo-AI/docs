@@ -4,11 +4,67 @@ sidebar_position: 4
 
 # Co-pilot
 
-Co-pilot is a deep search agent for your traces. It answers questions about what happened, why it happened, and where to look next.
+Co-pilot is a conversational assistant that helps you understand your agent's behavior. It searches through your traces, rewards, and learnings to answer questions and surface insights you might otherwise miss.
+
+## Why Co-pilot Matters
+
+As your agent handles more tasks, the volume of traces grows quickly. Manually reviewing hundreds or thousands of executions to find patterns is impractical. You might know something is wrong, but not where to look.
+
+Co-pilot solves this by letting you ask questions in natural language. Instead of clicking through traces one by one, you describe what you want to know and Co-pilot finds the answer, complete with links to the supporting evidence.
 
 ## What You Can Ask
-- Which tool calls are causing failures?
-- Where do users abandon tasks?
-- What changed between two versions of the agent?
 
-Co-pilot reads your traces and returns a short, actionable summary with links to the supporting events.
+Co-pilot can answer a wide range of questions about your agent's behavior:
+
+**Failure Analysis**
+- "Which tool calls are causing the most failures?"
+- "What errors happened in the last 24 hours?"
+- "Show me tasks where the agent gave incorrect information."
+
+**Usage Patterns**
+- "Where do users abandon tasks?"
+- "What are the most common user requests?"
+- "Which tools are used most frequently?"
+
+**Comparisons**
+- "What changed between version 1.2 and version 1.3 of the agent?"
+- "How do reward scores compare across different models?"
+- "Are there differences in behavior between morning and evening traffic?"
+
+**Debugging**
+- "Why did task X fail?"
+- "Show me the trace for thread Y."
+- "What was the model's reasoning in this task?"
+
+## How Co-pilot Works
+
+When you ask a question:
+
+1. **Query Understanding**: Co-pilot interprets your question and determines what data it needs to answer.
+
+2. **Search**: Co-pilot searches through traces, rewards, and learnings to find relevant information.
+
+3. **Analysis**: Co-pilot analyzes the results and synthesizes an answer to your question.
+
+4. **Response**: Co-pilot returns a clear summary with links to the specific traces, events, or learnings that support the answer.
+
+## Using Co-pilot
+
+Access Co-pilot from the Marlo dashboard:
+
+1. Navigate to your project.
+2. Open the Co-pilot panel.
+3. Type your question in natural language.
+4. Review the response and click through to supporting evidence.
+
+You can ask follow-up questions to drill deeper. Co-pilot maintains context within a conversation, so you can refine your queries without repeating background information.
+
+## Example Conversation
+
+**You**: "What's causing failures in the checkout flow?"
+
+**Co-pilot**: "I found 23 failed tasks in the checkout flow over the past week. The most common cause (15 tasks) is the `validate_payment` tool returning timeout errors. Here are three example traces: [link], [link], [link]. The second most common cause (6 tasks) is incorrect product ID formatting. Would you like me to show you the specific error messages?"
+
+**You**: "Yes, show me the payment timeout errors."
+
+**Co-pilot**: "Here are the 15 tasks with payment timeout errors. The timeouts occur most frequently between 2-4 PM UTC, suggesting a possible load issue. The average response time before timeout was 28 seconds. [links to traces]"

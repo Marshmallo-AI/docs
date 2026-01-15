@@ -4,126 +4,472 @@ sidebar_position: 3
 
 # HTTP API
 
-Use the HTTP API if you do not want to use an SDK or are working in a non-Python runtime.
+Use the HTTP API when you are not using Python or want direct control over how events are sent to Marlo.
 
-## Endpoints
-- `POST {endpoint}/events`
-- `POST {endpoint}/learnings`
+## Base URL
 
-All requests require:
 ```
-Authorization: Bearer <write_key>
+https://api.marshmallo.ai
+```
+
+## Authentication
+
+All requests require an API key in the Authorization header:
+
+```
+Authorization: Bearer <api_key>
 Content-Type: application/json
 ```
 
-## Event Shape
-Each event is a JSON object with the same top-level shape:
+## Endpoints
 
-```json
-{
-  "run_id": 1720000000000,
-  "agent_id": "support-agent",
-  "parent_agent_id": null,
-  "invocation_id": "uuid-123",
-  "task_id": 1720000000000000,
-  "event_type": "llm_call",
-  "payload": {}
-}
-```
+### GET /scope
 
-## Required Events
-To receive rewards and learnings, send:
-- `agent_definition`
-- `task_start`
-- `llm_call`
-- `tool_call`
-- `task_end`
-
-### agent_definition payload
-```json
-{
-  "agent_id": "support-agent",
-  "parent_agent_id": null,
-  "name": "support-agent",
-  "system_prompt": "You are a support agent",
-  "tool_definitions": [],
-  "mcp_definitions": [],
-  "model_config": { "model": "gpt-4" },
-  "definition_hash": "sha256-hash"
-}
-```
-
-### task_start payload
-```json
-{
-  "task_id": 1720000000000000,
-  "task": "reset my password",
-  "metadata": { "thread_id": "conversation-123", "thread_name": "Password Reset" }
-}
-```
-
-### llm_call payload
-```json
-{
-  "messages": [{ "role": "user", "content": "reset my password" }],
-  "model_params": { "model": "gpt-4" },
-  "response": { "text": "Sure, I can help" },
-  "usage": { "prompt_tokens": 12, "completion_tokens": 18, "total_tokens": 30 },
-  "reasoning": { "summary": "Provide reset steps" }
-}
-```
-
-### tool_call payload
-```json
-{
-  "tool_name": "get_user_info",
-  "input": { "user_id": "u_123" },
-  "output": { "email": "user@example.com" }
-}
-```
-
-### task_end payload
-```json
-{
-  "task_id": 1720000000000000,
-  "status": "success",
-  "final_answer": "Reset link sent."
-}
-```
-
-## Send Events
-Send a batch of events in one request:
+Returns the project scope associated with your API key. Use this to get the `project_id` needed for generating `run_id`.
 
 ```bash
-curl -X POST "$MARLO_ENDPOINT/events" \
-  -H "Authorization: Bearer $MARLO_WRITE_KEY" \
+curl -X GET "https://api.marshmallo.ai/scope" \
+  -H "Authorization: Bearer $MARLO_API_KEY"
+```
+
+**Response:**
+
+```json
+{
+  "scope": {
+    "project_id": "proj_abc123",
+    "org_id": "org_xyz789",
+    "user_id": "user_456"
+  }
+}
+```
+
+- **project_id** (str): The project this API key belongs to.
+- **org_id** (str): The organization that owns the project.
+- **user_id** (str): The user who created the API key.
+
+### POST /events
+
+Sends a batch of events to Marlo. Events are processed and stored as part of the agent's execution history.
+
+```bash
+curl -X POST "https://api.marshmallo.ai/events" \
+  -H "Authorization: Bearer $MARLO_API_KEY" \
   -H "Content-Type: application/json" \
   -d '[
     {
-      "run_id": 1720000000000,
+      "run_id": 1234567890123456,
       "agent_id": "support-agent",
       "parent_agent_id": null,
-      "invocation_id": "uuid-123",
-      "task_id": 1720000000000000,
+      "invocation_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "task_id": 1720000000000001,
       "event_type": "task_start",
-      "payload": { "task_id": 1720000000000000, "task": "reset my password" }
+      "payload": {
+        "task": "Reset my password",
+        "metadata": { "thread_id": "conv-123" }
+      }
     }
   ]'
 ```
 
-## Fetch Learnings
-```bash
-curl -X POST "$MARLO_ENDPOINT/learnings" \
-  -H "Authorization: Bearer $MARLO_WRITE_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"learning_key":"support-agent"}'
+**Response:**
+
+```json
+{
+  "ingested": 1
+}
 ```
 
-The response returns:
+- **ingested** (int): The number of events successfully processed.
+
+### POST /learnings
+
+Retrieves the current learnings for an agent. Use this to inject learnings into your agent's context.
+
+```bash
+curl -X POST "https://api.marshmallo.ai/learnings" \
+  -H "Authorization: Bearer $MARLO_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"learning_key": "support-agent"}'
+```
+
+**Request fields:**
+
+- **learning_key** (str): The agent name to fetch learnings for.
+
+**Response:**
+
 ```json
 {
   "learning_state": {
-    "learnings_text": "..."
+    "learnings_text": "- Always verify order ID format before calling lookup_order\n- Ask for email confirmation when processing refunds",
+    "active": [
+      {
+        "learning_id": "learning-abc123",
+        "learning": "Always verify order ID format before calling lookup_order",
+        "expected_outcome": "Reduces tool call failures",
+        "confidence": 0.85
+      }
+    ]
   }
 }
 ```
+
+- **learnings_text** (str): Formatted text of all active learnings, ready to inject into prompts.
+- **active** (list): Individual learning objects with details.
+  - **learning_id** (str): Unique identifier for this learning.
+  - **learning** (str): The learning content.
+  - **expected_outcome** (str): What improvement this learning should produce.
+  - **confidence** (float): Confidence score between 0 and 1.
+
+## Event Structure
+
+Every event sent to Marlo follows the same structure:
+
+```json
+{
+  "run_id": 1234567890123456,
+  "agent_id": "support-agent",
+  "parent_agent_id": null,
+  "invocation_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "task_id": 1720000000000001,
+  "event_type": "task_start",
+  "payload": {}
+}
+```
+
+- **run_id** (int): Session identifier, computed as a hash of `project_id:thread_id`. All events in the same conversation share this ID.
+- **agent_id** (str): The name of the agent emitting this event.
+- **parent_agent_id** (str | null): The parent agent's name when using multi-agent systems. Set to `null` for top-level agents.
+- **invocation_id** (str): A UUID that uniquely identifies this task invocation.
+- **task_id** (int): A unique identifier for the task, typically a snowflake ID or timestamp-based integer.
+- **event_type** (str): The type of event. One of: `agent_definition`, `task_start`, `llm_call`, `tool_call`, `log`, `task_end`.
+- **payload** (object): Event-specific data. The structure depends on the event type.
+
+## Event Payloads
+
+### agent_definition
+
+Registers the agent's configuration. Send this once per agent before sending other events for that agent. Re-send if the agent definition changes.
+
+```json
+{
+  "name": "support-agent",
+  "system_prompt": "You are a helpful support agent that assists users with account issues.",
+  "tool_definitions": [
+    {
+      "name": "get_user",
+      "description": "Fetches user information by user ID",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_id": { "type": "string" }
+        },
+        "required": ["user_id"]
+      }
+    }
+  ],
+  "mcp_definitions": [],
+  "model_config": { "model": "gpt-4", "temperature": 0.7 },
+  "definition_hash": "e3b0c44298fc1c149afbf4c8996fb924"
+}
+```
+
+- **name** (str): The agent's name, must match `agent_id` in events.
+- **system_prompt** (str): The system prompt used by this agent.
+- **tool_definitions** (list): List of tools available to the agent. Each tool should have:
+  - **name** (str): Tool name.
+  - **description** (str): What the tool does.
+  - **parameters** (object): JSON Schema defining the tool's parameters.
+- **mcp_definitions** (list): MCP server configurations. Pass `[]` if not using MCP.
+- **model_config** (object): Model settings such as model name and temperature.
+- **definition_hash** (str): A hash of the agent definition. Marlo uses this to detect when the agent configuration has changed and needs re-registration.
+
+### task_start
+
+Marks the beginning of a new task.
+
+```json
+{
+  "task": "Reset my password please",
+  "metadata": {
+    "thread_id": "conversation-abc123",
+    "thread_name": "Password Reset Request"
+  }
+}
+```
+
+- **task** (str): The user's input or request that started this task.
+- **metadata.thread_id** (str): Stable identifier for the conversation. Tasks with the same `thread_id` are grouped together.
+- **metadata.thread_name** (str, optional): Human-readable label shown in the dashboard. Once set for a thread, it stays fixed for all subsequent tasks in that thread.
+
+### llm_call
+
+Records a call to a language model.
+
+```json
+{
+  "messages": [
+    { "role": "system", "content": "You are a support agent." },
+    { "role": "user", "content": "Reset my password" }
+  ],
+  "model_params": { "model": "gpt-4", "temperature": 0.7 },
+  "response": "I can help you reset your password. First, I need to verify your identity.",
+  "usage": {
+    "prompt_tokens": 45,
+    "completion_tokens": 22,
+    "total_tokens": 67
+  },
+  "reasoning": {
+    "summary": "User needs password reset, should verify identity first"
+  }
+}
+```
+
+- **messages** (list, optional): The messages sent to the model.
+- **model_params** (object): The model configuration including model name.
+- **response** (str | object, optional): The model's response.
+- **usage** (object, optional): Token usage statistics.
+  - **prompt_tokens** (int): Tokens in the input.
+  - **completion_tokens** (int): Tokens in the output.
+  - **total_tokens** (int): Total tokens used.
+- **reasoning** (object, optional): Any reasoning or chain-of-thought output.
+
+### tool_call
+
+Records a tool invocation by the agent.
+
+```json
+{
+  "tool_name": "get_user_info",
+  "input": { "user_id": "user_12345" },
+  "output": { "email": "user@example.com", "verified": true },
+  "error": null
+}
+```
+
+- **tool_name** (str): The name of the tool that was called. Should match a tool in your agent definition.
+- **input** (object): The arguments passed to the tool.
+- **output** (any): The result returned by the tool.
+- **error** (str, optional): Error message if the tool call failed.
+
+### log
+
+Records reasoning steps or intermediate thoughts.
+
+```json
+{
+  "reasoning": "User is asking about password reset. I should first verify their identity before proceeding with the reset process."
+}
+```
+
+- **reasoning** (str): The agent's reasoning or thought process.
+
+### task_end
+
+Marks the completion of a task.
+
+```json
+{
+  "status": "success",
+  "final_answer": "Your password reset link has been sent to your email address.",
+  "error": null
+}
+```
+
+- **status** (str): Either `"success"` or `"error"`.
+- **final_answer** (str, optional): The final response given to the user.
+- **error** (str, optional): Error message if the task failed.
+
+## Multi-Agent Systems
+
+For workflows with multiple agents, use `parent_agent_id` to link child tasks to their parent. This creates a hierarchy visible in the dashboard.
+
+### Event Flow
+
+1. Parent agent receives user request → sends `task_start` with `parent_agent_id: null`
+2. Parent delegates to child agent → child sends `task_start` with `parent_agent_id: "parent-agent-name"`
+3. Child completes work → child sends `task_end`
+4. Parent combines results and responds → parent sends `task_end`
+
+### Example: Orchestrator with Researcher
+
+```json
+// 1. Parent task starts
+{
+  "run_id": 1234567890123456,
+  "agent_id": "orchestrator",
+  "parent_agent_id": null,
+  "invocation_id": "parent-uuid-001",
+  "task_id": 1720000000000001,
+  "event_type": "task_start",
+  "payload": {
+    "task": "Research and summarize AI trends",
+    "metadata": { "thread_id": "research-123", "thread_name": "AI Trends Research" }
+  }
+}
+
+// 2. Parent logs reasoning
+{
+  "run_id": 1234567890123456,
+  "agent_id": "orchestrator",
+  "parent_agent_id": null,
+  "invocation_id": "parent-uuid-001",
+  "task_id": 1720000000000001,
+  "event_type": "log",
+  "payload": {
+    "reasoning": "User wants research. I'll delegate to the researcher agent."
+  }
+}
+
+// 3. Child task starts (note parent_agent_id)
+{
+  "run_id": 1234567890123456,
+  "agent_id": "researcher",
+  "parent_agent_id": "orchestrator",
+  "invocation_id": "child-uuid-001",
+  "task_id": 1720000000000002,
+  "event_type": "task_start",
+  "payload": {
+    "task": "Find information about AI trends",
+    "metadata": { "thread_id": "research-123" }
+  }
+}
+
+// 4. Child makes tool call
+{
+  "run_id": 1234567890123456,
+  "agent_id": "researcher",
+  "parent_agent_id": "orchestrator",
+  "invocation_id": "child-uuid-001",
+  "task_id": 1720000000000002,
+  "event_type": "tool_call",
+  "payload": {
+    "tool_name": "web_search",
+    "input": { "query": "AI trends 2024" },
+    "output": { "results": ["Source 1...", "Source 2..."] }
+  }
+}
+
+// 5. Child task ends
+{
+  "run_id": 1234567890123456,
+  "agent_id": "researcher",
+  "parent_agent_id": "orchestrator",
+  "invocation_id": "child-uuid-001",
+  "task_id": 1720000000000002,
+  "event_type": "task_end",
+  "payload": {
+    "status": "success",
+    "final_answer": "Found 3 relevant sources about AI trends..."
+  }
+}
+
+// 6. Parent makes LLM call to synthesize
+{
+  "run_id": 1234567890123456,
+  "agent_id": "orchestrator",
+  "parent_agent_id": null,
+  "invocation_id": "parent-uuid-001",
+  "task_id": 1720000000000001,
+  "event_type": "llm_call",
+  "payload": {
+    "model_params": { "model": "gpt-4" },
+    "response": "Based on my research, here are the key AI trends...",
+    "usage": { "prompt_tokens": 200, "completion_tokens": 150 }
+  }
+}
+
+// 7. Parent task ends
+{
+  "run_id": 1234567890123456,
+  "agent_id": "orchestrator",
+  "parent_agent_id": null,
+  "invocation_id": "parent-uuid-001",
+  "task_id": 1720000000000001,
+  "event_type": "task_end",
+  "payload": {
+    "status": "success",
+    "final_answer": "Based on my research, here are the key AI trends..."
+  }
+}
+```
+
+### Key Points
+
+- All events in the same conversation share the same `run_id`
+- Each task invocation gets a unique `invocation_id` (UUID)
+- Each task gets a unique `task_id` (integer)
+- Child agents set `parent_agent_id` to link back to the parent
+- Send `agent_definition` for each agent before their first task
+
+## ID Generation
+
+### run_id
+
+The session ID is computed by hashing the project ID and thread ID:
+
+```python
+import hashlib
+
+def generate_run_id(project_id: str, thread_id: str) -> int:
+    combined = f"{project_id}:{thread_id}"
+    hash_hex = hashlib.sha256(combined.encode()).hexdigest()[:16]
+    return int(hash_hex, 16)
+```
+
+### task_id
+
+Use a snowflake ID generator or a timestamp-based approach:
+
+```python
+import time
+
+def generate_task_id() -> int:
+    return int(time.time() * 1000000)
+```
+
+### invocation_id
+
+Generate a UUID for each task invocation:
+
+```python
+import uuid
+
+def generate_invocation_id() -> str:
+    return str(uuid.uuid4())
+```
+
+### definition_hash
+
+Hash the agent definition to detect changes:
+
+```python
+import hashlib
+import json
+
+def generate_definition_hash(
+    name: str,
+    system_prompt: str,
+    tool_definitions: list,
+    mcp_definitions: list,
+    model_config: dict
+) -> str:
+    definition = {
+        "name": name,
+        "system_prompt": system_prompt,
+        "tool_definitions": tool_definitions,
+        "mcp_definitions": mcp_definitions,
+        "model_config": model_config,
+    }
+    content = json.dumps(definition, sort_keys=True)
+    return hashlib.sha256(content.encode()).hexdigest()[:32]
+```
+
+## Errors
+
+| Status Code | Meaning |
+|-------------|---------|
+| 400 | Bad request. The request body is malformed or missing required fields. |
+| 401 | Unauthorized. The API key is missing or invalid. |
+| 502 | Bad gateway. The server encountered a temporary error. Retry the request. |

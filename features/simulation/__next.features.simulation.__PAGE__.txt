@@ -2,8 +2,104 @@
 2:I[55169,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"TOCProvider"]
 3:I[769,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"Sidebar"]
 4:I[47486,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"ClientWrapper"]
-5:I[63894,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"HeadingAnchor"]
-6:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/7340adf74ff47ec0.js"],"OutletBoundary"]
-7:"$Sreact.suspense"
-0:{"buildId":"50L0pLLQeYdzEt9EISG1F","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"What You Can Do","id":"what-you-can-do","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"sidebar_position":5,"title":"Simulation","filePath":"src/app/features/simulation/page.mdx","timestamp":1768506793000},"sourceCode":"---\nsidebar_position: 5\n---\n\n# Simulation\n\nSimulation replays the same task with different models or settings. It helps you compare outcomes without changing production traffic.\n\n## What You Can Do\n- Re-run a trace with a new model\n- Compare outputs side-by-side\n- Measure reward changes across model choices\n\nSimulation uses existing traces, so you can evaluate changes without new data collection.","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Simulation","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Simulation replays the same task with different models or settings. It helps you compare outcomes without changing production traffic."}],"\n",["$","h2",null,{"id":"what-you-can-do","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What You Can Do",["$","$L5",null,{"id":"what-you-can-do"}]]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Re-run a trace with a new model"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Compare outputs side-by-side"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Measure reward changes across model choices"}],"\n"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Simulation uses existing traces, so you can evaluate changes without new data collection."}]]}]]}]]}]}],null,["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
-8:null
+9:I[63894,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"HeadingAnchor"]
+18:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/7340adf74ff47ec0.js"],"OutletBoundary"]
+19:"$Sreact.suspense"
+5:Tc04,---
+sidebar_position: 5
+---
+
+# Simulation
+
+Simulation lets you replay existing tasks with different configurations. You can test new models, adjust prompts, or modify settings without affecting production traffic.
+
+## Why Simulation Matters
+
+Changing an agent in production is risky. A new model might perform better on some tasks but worse on others. A prompt tweak might fix one issue while introducing another. Without a way to test changes safely, you are forced to guess.
+
+Simulation solves this by letting you re-run real tasks from your trace history. You see exactly how the new configuration would have handled actual user requests, complete with reward scores for comparison. This lets you make data-driven decisions before deploying changes.
+
+## What You Can Simulate
+
+Simulation supports several types of configuration changes:
+
+**Model Changes**
+- Switch from GPT-4 to Claude or Gemini
+- Test a newer version of the same model
+- Compare performance across model families
+
+**Prompt Changes**
+- Modify the system prompt
+- Add or remove instructions
+- Test different prompt structures
+
+**Parameter Changes**
+- Adjust temperature or top-p settings
+- Change max token limits
+- Modify other model parameters
+
+**Tool Changes**
+- Add or remove available tools
+- Modify tool descriptions
+- Test tool parameter changes
+
+## How Simulation Works
+
+Simulation replays a task using the original inputs but with your new configuration:
+
+1. **Select a Task**: Choose a task from your trace history that you want to replay.
+
+2. **Configure Changes**: Specify what you want to change: model, prompt, parameters, or tools.
+
+3. **Run Simulation**: Marlo replays the task using the original user input but with your new configuration.
+
+4. **Compare Results**: View the simulated output alongside the original, with reward scores for both.
+
+## Using Simulation
+
+Access Simulation from the Marlo dashboard:
+
+1. Navigate to a task in your trace history.
+2. Click the Simulate button.
+3. Configure your changes in the simulation panel.
+4. Run the simulation and review the results.
+
+You can run multiple simulations on the same task to compare several configurations at once.
+
+## What You Get
+
+Each simulation produces:
+
+- **Simulated Output**: The response your agent would have given with the new configuration.
+- **Simulated Reward**: A reward score for the simulated output, computed using the same criteria as production.
+- **Comparison View**: Side-by-side display of original and simulated outputs with their respective scores.
+- **Cost Estimate**: Token usage and estimated cost for the simulated run.
+
+## Batch Simulation
+
+For larger evaluations, you can run simulations across multiple tasks at once:
+
+1. Select a set of tasks from your trace history (e.g., all tasks from the past week, or all tasks with low reward scores).
+2. Configure your changes.
+3. Run the batch simulation.
+4. Review aggregate results showing how many tasks improved, degraded, or stayed the same.
+
+Batch simulation helps you understand the overall impact of a change before rolling it out to production.0:{"buildId":"C37_ARqDSqvv8ElxtPMXO","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Why Simulation Matters","id":"why-simulation-matters","depth":2},{"value":"What You Can Simulate","id":"what-you-can-simulate","depth":2},{"value":"How Simulation Works","id":"how-simulation-works","depth":2},{"value":"Using Simulation","id":"using-simulation","depth":2},{"value":"What You Get","id":"what-you-get","depth":2},{"value":"Batch Simulation","id":"batch-simulation","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"sidebar_position":5,"title":"Simulation","filePath":"src/app/features/simulation/page.mdx","timestamp":1768507550000},"sourceCode":"$5","children":["$L6","$L7"]}]]}]}],null,"$L8"]}],"loading":null,"isPartial":false}
+6:["$","div",null,{"id":"nextra-skip-nav"}]
+7:["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Simulation","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Simulation lets you replay existing tasks with different configurations. You can test new models, adjust prompts, or modify settings without affecting production traffic."}],"\n",["$","h2",null,{"id":"why-simulation-matters","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Why Simulation Matters",["$","$L9",null,{"id":"why-simulation-matters"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Changing an agent in production is risky. A new model might perform better on some tasks but worse on others. A prompt tweak might fix one issue while introducing another. Without a way to test changes safely, you are forced to guess."}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Simulation solves this by letting you re-run real tasks from your trace history. You see exactly how the new configuration would have handled actual user requests, complete with reward scores for comparison. This lets you make data-driven decisions before deploying changes."}],"\n",["$","h2",null,{"id":"what-you-can-simulate","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What You Can Simulate",["$","$L9",null,{"id":"what-you-can-simulate"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Simulation supports several types of configuration changes:"}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"Model Changes"}]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Switch from GPT-4 to Claude or Gemini"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Test a newer version of the same model"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Compare performance across model families"}],"\n"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"Prompt Changes"}]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Modify the system prompt"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Add or remove instructions"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Test different prompt structures"}],"\n"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"Parameter Changes"}]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Adjust temperature or top-p settings"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Change max token limits"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Modify other model parameters"}],"\n"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"Tool Changes"}]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Add or remove available tools"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Modify tool descriptions"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Test tool parameter changes"}],"\n"]}],"\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17"]}]
+8:["$","$L18",null,{"children":["$","$19",null,{"name":"Next.MetadataOutlet","children":"$@1a"}]}]
+a:["$","h2",null,{"id":"how-simulation-works","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["How Simulation Works",["$","$L9",null,{"id":"how-simulation-works"}]]}]
+b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Simulation replays a task using the original inputs but with your new configuration:"}]
+c:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Select a Task"}],": Choose a task from your trace history that you want to replay."]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Configure Changes"}],": Specify what you want to change: model, prompt, parameters, or tools."]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Run Simulation"}],": Marlo replays the task using the original user input but with your new configuration."]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Compare Results"}],": View the simulated output alongside the original, with reward scores for both."]}],"\n"]}],"\n"]}]
+d:["$","h2",null,{"id":"using-simulation","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Using Simulation",["$","$L9",null,{"id":"using-simulation"}]]}]
+e:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Access Simulation from the Marlo dashboard:"}]
+f:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Navigate to a task in your trace history."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Click the Simulate button."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Configure your changes in the simulation panel."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Run the simulation and review the results."}],"\n"]}]
+10:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"You can run multiple simulations on the same task to compare several configurations at once."}]
+11:["$","h2",null,{"id":"what-you-get","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What You Get",["$","$L9",null,{"id":"what-you-get"}]]}]
+12:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Each simulation produces:"}]
+13:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Simulated Output"}],": The response your agent would have given with the new configuration."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Simulated Reward"}],": A reward score for the simulated output, computed using the same criteria as production."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Comparison View"}],": Side-by-side display of original and simulated outputs with their respective scores."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Cost Estimate"}],": Token usage and estimated cost for the simulated run."]}],"\n"]}]
+14:["$","h2",null,{"id":"batch-simulation","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Batch Simulation",["$","$L9",null,{"id":"batch-simulation"}]]}]
+15:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"For larger evaluations, you can run simulations across multiple tasks at once:"}]
+16:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Select a set of tasks from your trace history (e.g., all tasks from the past week, or all tasks with low reward scores)."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Configure your changes."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Run the batch simulation."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Review aggregate results showing how many tasks improved, degraded, or stayed the same."}],"\n"]}]
+17:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Batch simulation helps you understand the overall impact of a change before rolling it out to production."}]
+1a:null

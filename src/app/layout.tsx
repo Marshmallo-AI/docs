@@ -12,11 +12,11 @@ export const metadata = {
  
 const navbar = (
   <Navbar
-    logo={<b>Marshmallo.ai</b>}
+    logo={<b>Marshmallo</b>}
     // ... Your additional navbar options
   />
 )
-const footer = <Footer>MIT {new Date().getFullYear()} © Marshmallo.ai.</Footer>
+const footer = <Footer>MIT {new Date().getFullYear()} © Marshmallo.</Footer>
  
 const rootOrder = ['index', 'page', 'getting-started', 'sdk', 'features', 'agent-systems']
 const sdkOrder = ['page', 'python', 'typescript', 'http']

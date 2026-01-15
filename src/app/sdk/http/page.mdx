@@ -9,7 +9,7 @@ Use the HTTP API when you are not using Python or want direct control over how e
 ## Base URL
 
 ```
-https://api.marlo.ai
+https://api.marshmallo.ai
 ```
 
 ## Authentication
@@ -28,7 +28,7 @@ Content-Type: application/json
 Returns the project scope associated with your API key. Use this to get the `project_id` needed for generating `run_id`.
 
 ```bash
-curl -X GET "https://api.marlo.ai/scope" \
+curl -X GET "https://api.marshmallo.ai/scope" \
   -H "Authorization: Bearer $MARLO_API_KEY"
 ```
 
@@ -53,7 +53,7 @@ curl -X GET "https://api.marlo.ai/scope" \
 Sends a batch of events to Marlo. Events are processed and stored as part of the agent's execution history.
 
 ```bash
-curl -X POST "https://api.marlo.ai/events" \
+curl -X POST "https://api.marshmallo.ai/events" \
   -H "Authorization: Bearer $MARLO_API_KEY" \
   -H "Content-Type: application/json" \
   -d '[
@@ -87,7 +87,7 @@ curl -X POST "https://api.marlo.ai/events" \
 Retrieves the current learnings for an agent. Use this to inject learnings into your agent's context.
 
 ```bash
-curl -X POST "https://api.marlo.ai/learnings" \
+curl -X POST "https://api.marshmallo.ai/learnings" \
   -H "Authorization: Bearer $MARLO_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"learning_key": "support-agent"}'

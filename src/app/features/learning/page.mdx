@@ -4,13 +4,72 @@ sidebar_position: 3
 
 # Learnings
 
-Learnings are reusable guidance generated from rewards. They summarize what to do (or avoid) in similar situations.
+Learnings are reusable guidance generated from past task outcomes. They capture what works and what to avoid, so your agent improves automatically over time.
+
+## Why Learnings Matter
+
+Agents make the same mistakes repeatedly because they have no memory of past failures. Each task starts fresh, with no knowledge of what went wrong before.
+
+Learnings solve this by extracting patterns from rewards and turning them into actionable guidance. When your agent fails a task, Marlo generates a learning that describes what to do differently. The next time a similar task runs, that learning is injected into the agent's context, helping it avoid the same mistake.
+
+This creates a continuous improvement loop: failures become lessons, and lessons prevent future failures.
 
 ## How Learnings Work
-1) A task completes.
-2) A reward grades the outcome.
-3) Marlo generates a learning object from the trace and score.
-4) Active learnings are surfaced for the next run.
 
-## Using Learnings
-The SDK can return learnings as plain text for prompt injection. You decide where to place them in your system prompt or context.
+Learnings are generated automatically after a task receives a reward:
+
+1. **Reward Analysis**: Marlo examines the reward rationale to understand what went wrong or what could be improved.
+
+2. **Learning Generation**: A model extracts actionable guidance from the rationale, describing what the agent should do in similar situations.
+
+3. **Confidence Assignment**: Each learning receives a confidence score between 0.0 and 1.0, indicating how reliable the guidance is based on supporting evidence.
+
+4. **Storage**: The learning is stored and associated with the agent that produced it.
+
+5. **Application**: When a new task starts, active learnings for that agent are fetched and can be injected into the agent's context.
+
+## What a Learning Contains
+
+Each learning includes:
+
+- **Learning**: The guidance itself, written as a clear instruction (e.g., "Always verify order ID format before calling lookup_order").
+- **Expected Outcome**: What improvement this learning should produce (e.g., "Reduces tool call failures").
+- **Confidence**: A score between 0.0 and 1.0 indicating how reliable this learning is.
+
+## Fetching Learnings
+
+Use `task.get_learnings()` to fetch active learnings for the current agent:
+
+```python
+with marlo.task(thread_id="user-123", agent="support-agent") as task:
+    task.input(user_message)
+
+    # Fetch learnings
+    learnings = task.get_learnings()
+
+    # Build system prompt with learnings
+    system_prompt = "You are a customer support agent."
+    if learnings:
+        learnings_text = learnings.get("learnings_text", "")
+        if learnings_text:
+            system_prompt += f"\n\nLearnings from past interactions:\n{learnings_text}"
+
+    # Use system_prompt in your LLM call...
+```
+
+The `learnings_text` field contains a formatted string of all active learnings, ready to inject into your agent's prompt. You decide where to place it: in the system prompt, as a separate context block, or anywhere else that makes sense for your agent.
+
+## How Learnings Evolve
+
+Learnings are not static. As more tasks run and more rewards are generated, Marlo updates existing learnings with new evidence:
+
+- **Confidence Increases**: When a learning is applied and the task succeeds, the confidence score increases.
+- **Confidence Decreases**: When a learning is applied and the task still fails, the confidence score decreases.
+- **Refinement**: If new evidence suggests a learning should be modified, Marlo updates the guidance while preserving the learning ID.
+- **Retirement**: Learnings with very low confidence are eventually retired and no longer surfaced.
+
+## Per-Agent Learnings
+
+Learnings are scoped to individual agents. Each agent has its own set of learnings based on its own task history. In multi-agent systems, the orchestrator, researcher, and writer each develop their own learnings independently.
+
+This means specialized agents get specialized guidance. A researcher agent learns how to search effectively, while a writer agent learns how to structure summaries clearly.

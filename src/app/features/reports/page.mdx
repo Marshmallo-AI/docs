@@ -4,12 +4,77 @@ sidebar_position: 6
 
 # Reports
 
-Reports summarize what your agents are doing over time.
+Reports provide a high-level view of your agent's performance over time. They aggregate data from traces, rewards, and learnings into dashboards and summaries that help you track progress and identify trends.
 
-## What You Get
-- Reward trends
-- Frequent failure modes
-- Active learnings and coverage
-- Tool usage breakdowns
+## Why Reports Matter
 
-Reports are built from the same traces and rewards you already send.
+Individual traces and rewards tell you what happened in a single task. But understanding your agent's overall health requires looking at patterns across many tasks over time. Are reward scores improving? Which failure modes are most common? How are learnings affecting performance?
+
+Reports answer these questions by summarizing your agent's behavior into clear metrics and visualizations. Instead of reviewing tasks one by one, you can see the big picture at a glance.
+
+## What Reports Show
+
+Reports provide several categories of insights:
+
+**Reward Trends**
+- Average reward score over time
+- Score distribution (how many tasks scored high vs. low)
+- Score changes after deployments or configuration updates
+
+**Failure Analysis**
+- Most common failure modes
+- Failure rate over time
+- Tasks with repeated failures
+
+**Learning Coverage**
+- Number of active learnings
+- Learning application rate (how often learnings are used)
+- Impact of learnings on reward scores
+
+**Tool Usage**
+- Most frequently used tools
+- Tool success and failure rates
+- Average tool response times
+
+**Task Volume**
+- Number of tasks per day/week/month
+- Task distribution by agent (for multi-agent systems)
+- Peak usage times
+
+## Accessing Reports
+
+Access Reports from the Marlo dashboard:
+
+1. Navigate to your project.
+2. Click on the Reports tab.
+3. Select the time range you want to analyze.
+4. View the dashboard with all available metrics.
+
+You can filter reports by agent, time range, or other criteria to focus on specific areas of interest.
+
+## Report Types
+
+Marlo provides several report formats:
+
+**Dashboard View**
+A real-time dashboard showing key metrics with charts and graphs. Use this for day-to-day monitoring and quick health checks.
+
+**Summary Reports**
+Periodic summaries (daily, weekly, monthly) delivered to your inbox. These highlight significant changes, new failure modes, and learning activity.
+
+**Custom Reports**
+Build custom reports by selecting specific metrics, filters, and time ranges. Export data for further analysis in your own tools.
+
+## Using Reports for Improvement
+
+Reports help you prioritize where to focus your attention:
+
+1. **Identify Problem Areas**: Look for agents or tools with declining reward scores or high failure rates.
+
+2. **Validate Changes**: After modifying an agent, check if reward scores improve in subsequent reports.
+
+3. **Track Learning Impact**: Monitor whether active learnings are reducing specific failure modes over time.
+
+4. **Plan Capacity**: Use task volume trends to anticipate growth and plan infrastructure accordingly.
+
+Reports turn raw telemetry into actionable intelligence, helping you continuously improve your agent's performance.

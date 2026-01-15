@@ -4,11 +4,77 @@ sidebar_position: 5
 
 # Simulation
 
-Simulation replays the same task with different models or settings. It helps you compare outcomes without changing production traffic.
+Simulation lets you replay existing tasks with different configurations. You can test new models, adjust prompts, or modify settings without affecting production traffic.
 
-## What You Can Do
-- Re-run a trace with a new model
-- Compare outputs side-by-side
-- Measure reward changes across model choices
+## Why Simulation Matters
 
-Simulation uses existing traces, so you can evaluate changes without new data collection.
+Changing an agent in production is risky. A new model might perform better on some tasks but worse on others. A prompt tweak might fix one issue while introducing another. Without a way to test changes safely, you are forced to guess.
+
+Simulation solves this by letting you re-run real tasks from your trace history. You see exactly how the new configuration would have handled actual user requests, complete with reward scores for comparison. This lets you make data-driven decisions before deploying changes.
+
+## What You Can Simulate
+
+Simulation supports several types of configuration changes:
+
+**Model Changes**
+- Switch from GPT-4 to Claude or Gemini
+- Test a newer version of the same model
+- Compare performance across model families
+
+**Prompt Changes**
+- Modify the system prompt
+- Add or remove instructions
+- Test different prompt structures
+
+**Parameter Changes**
+- Adjust temperature or top-p settings
+- Change max token limits
+- Modify other model parameters
+
+**Tool Changes**
+- Add or remove available tools
+- Modify tool descriptions
+- Test tool parameter changes
+
+## How Simulation Works
+
+Simulation replays a task using the original inputs but with your new configuration:
+
+1. **Select a Task**: Choose a task from your trace history that you want to replay.
+
+2. **Configure Changes**: Specify what you want to change: model, prompt, parameters, or tools.
+
+3. **Run Simulation**: Marlo replays the task using the original user input but with your new configuration.
+
+4. **Compare Results**: View the simulated output alongside the original, with reward scores for both.
+
+## Using Simulation
+
+Access Simulation from the Marlo dashboard:
+
+1. Navigate to a task in your trace history.
+2. Click the Simulate button.
+3. Configure your changes in the simulation panel.
+4. Run the simulation and review the results.
+
+You can run multiple simulations on the same task to compare several configurations at once.
+
+## What You Get
+
+Each simulation produces:
+
+- **Simulated Output**: The response your agent would have given with the new configuration.
+- **Simulated Reward**: A reward score for the simulated output, computed using the same criteria as production.
+- **Comparison View**: Side-by-side display of original and simulated outputs with their respective scores.
+- **Cost Estimate**: Token usage and estimated cost for the simulated run.
+
+## Batch Simulation
+
+For larger evaluations, you can run simulations across multiple tasks at once:
+
+1. Select a set of tasks from your trace history (e.g., all tasks from the past week, or all tasks with low reward scores).
+2. Configure your changes.
+3. Run the batch simulation.
+4. Review aggregate results showing how many tasks improved, degraded, or stayed the same.
+
+Batch simulation helps you understand the overall impact of a change before rolling it out to production.

@@ -4,18 +4,57 @@ sidebar_position: 2
 
 # Rewards
 
-Rewards turn a completed task into a score and explanation. They tell you what worked, what failed, and why.
+Rewards evaluate how well your agent completed a task. They turn a raw trace into a score and explanation, telling you what worked, what failed, and why.
 
-## What Rewards Need
-To score a task, Marlo needs a full trace:
-- Task input and output
-- LLM calls
-- Tool calls
-- Agent definition
+## Why Rewards Matter
+
+Agents can fail in subtle ways. A response might look correct but miss key details. A tool might return data that the agent misinterprets. Without structured evaluation, these failures go unnoticed.
+
+Rewards solve this by grading every task against consistent criteria. You get a numeric score that tracks quality over time, plus a written rationale that explains the reasoning. This makes failures visible and actionable.
+
+Rewards also feed into Marlo's learning system. When a task receives a low score, Marlo uses the rationale to generate guidance that prevents similar failures in the future.
+
+## How Rewards Work
+
+Rewards are computed automatically after a task ends:
+
+1. **Trace Collection**: Marlo gathers the complete trace for the task, including the agent definition, user input, LLM calls, tool calls, and final output.
+
+2. **Evaluation**: A judge model reviews the trace and evaluates the outcome based on task completion, response quality, and tool usage.
+
+3. **Scoring**: The judge assigns a score between 0.0 and 1.0, where 0.0 means complete failure and 1.0 means perfect execution.
+
+4. **Rationale**: The judge writes a short explanation describing what the agent did well and what it did poorly, with references to specific steps in the trace.
+
+## What Rewards Evaluate
+
+The judge considers several factors when scoring a task:
+
+- **Task Completion**: Did the agent accomplish what the user asked for?
+- **Response Quality**: Is the final output accurate, relevant, and well-formed?
+- **Tool Usage**: Did the agent use tools correctly and interpret their outputs properly?
+- **Efficiency**: Did the agent complete the task without unnecessary steps or repeated calls?
+- **Error Handling**: If something went wrong, did the agent recover gracefully or fail silently?
 
 ## What You Get
-- A numeric score
-- A short rationale
-- Evidence linked to the exact steps in the trace
 
-Rewards are computed automatically once a task ends.
+Each reward includes:
+
+- **Score**: A number between 0.0 and 1.0 representing overall task quality.
+- **Rationale**: A written explanation of the score, highlighting strengths and weaknesses.
+- **Evidence**: Links to specific events in the trace that support the evaluation.
+
+## Viewing Rewards in the Dashboard
+
+You can view rewards for any task in the Marlo dashboard:
+
+1. Navigate to your project and select a thread.
+2. Click on a task to open the trace view.
+3. The reward score and rationale appear alongside the trace events.
+4. Click on evidence links to jump directly to the relevant steps.
+
+Over time, you can track reward trends to see whether your agent is improving or degrading.
+
+## Connection to Learnings
+
+Rewards are the input to Marlo's learning system. When a task receives a reward, Marlo analyzes the rationale and generates learning objects that capture what the agent should do differently. These learnings are then surfaced in future tasks, allowing the agent to avoid repeating the same mistakes.

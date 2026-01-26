@@ -9,7 +9,7 @@ The Marlo SDK captures your agent's behavior and sends it to Marlo for evaluatio
 ## Installation
 
 ```bash
-npm install @marlo/sdk
+npm install @marshmallo/marlo
 ```
 
 ## Configuration
@@ -17,7 +17,7 @@ npm install @marlo/sdk
 Initialize the SDK once when your application starts. You'll find your API key in Settings → Project at marshmallo.ai.
 
 ```typescript
-import * as marlo from '@marlo/sdk';
+import * as marlo from '@marshmallo/marlo';
 
 await marlo.init(process.env.MARLO_API_KEY!);
 ```
@@ -181,7 +181,7 @@ const learnings = await task.getLearnings();
 // Build system prompt with learnings
 let systemPrompt = 'You are a customer support agent.';
 if (learnings) {
-  const learningsText = learnings.learnings_text;
+  const learningsText = learnings.learnings_text as string | undefined;
   if (learningsText) {
     systemPrompt += `\n\nLearnings from past interactions:\n${learningsText}`;
   }
@@ -223,7 +223,7 @@ For workflows with multiple agents, use `task.child()` to create child tasks. Ch
 ### Example: Research Assistant
 
 ```typescript
-import * as marlo from '@marlo/sdk';
+import * as marlo from '@marshmallo/marlo';
 
 await marlo.init('your-api-key');
 
@@ -341,7 +341,7 @@ process.on('SIGTERM', async () => {
 ## Full Example
 
 ```typescript
-import * as marlo from '@marlo/sdk';
+import * as marlo from '@marshmallo/marlo';
 
 // 1. Initialize
 await marlo.init(process.env.MARLO_API_KEY!);

@@ -4,9 +4,85 @@ sidebar_position: 1
 
 # Single Agent
 
-A single agent system is one agent that completes the full task from start to finish.
+A single agent system is the simplest architecture: one agent handles the complete task from start to finish. The agent receives user input, performs reasoning, calls tools as needed, and produces the final output.
 
 ![Single agent system diagram](/img/single_agent.png)
 
-## How to Track It
-Use one `marlo.task` per user request. All tool calls and model calls live inside that context.
+## When to Use
+
+Single agent systems work well for:
+
+- **Focused tasks** - One clear objective like answering questions or completing a specific workflow
+- **Simple tool usage** - A handful of related tools that one agent can manage effectively
+- **Quick responses** - When latency matters and you want minimal overhead
+
+## How Marlo Tracks It
+
+Wrap your agent logic in a single `marlo.task()` context. All LLM calls, tool calls, and reasoning steps are captured within that task.
+
+### Python
+
+```python
+with marlo.task(thread_id="user-123", agent="my-agent") as task:
+    task.input(user_message)
+    
+    # All your agent logic here
+    # LLM calls and tool calls are captured automatically
+    
+    task.output(final_response)
+```
+
+### TypeScript
+
+```typescript
+const task = marlo.task('user-123', 'my-agent').start();
+task.input(userMessage);
+
+// All your agent logic here
+// Record LLM and tool calls with task.llm() and task.tool()
+
+task.output(finalResponse);
+task.end();
+```
+
+## What You See in the Dashboard
+
+Each task appears as a single trace showing:
+- User input that started the task
+- All LLM calls with messages and token usage
+- All tool invocations with inputs and outputs
+- Internal reasoning steps
+- Final output returned to the user
+- Reward score and rationale
+
+Learnings are generated per-agent, so your single agent develops its own guidance over time.
+
+## Example: Support Agent
+
+A customer support agent that looks up orders and answers questions:
+
+```python
+marlo.agent(
+    name="support-agent",
+    system_prompt="You help customers with order inquiries.",
+    tools=[
+        {"name": "lookup_order", "description": "Find order by ID", ...},
+        {"name": "check_inventory", "description": "Check product stock", ...},
+    ],
+    mcp=[],
+)
+
+with marlo.task(thread_id=session_id, agent="support-agent") as task:
+    task.input("Where is my order #12345?")
+    
+    # Agent reasons about what to do
+    task.reasoning("Customer wants order status. I should look up the order.")
+    
+    # Agent calls tools
+    order = lookup_order("12345")  # Tracked if using @track_tool
+    
+    # Agent generates response
+    response = llm_call(...)  # Tracked if instrumented
+    
+    task.output("Your order shipped yesterday and arrives tomorrow.")
+```

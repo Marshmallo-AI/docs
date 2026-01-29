@@ -4,9 +4,139 @@ sidebar_position: 3
 
 # Chain
 
-A chain system is a linear flow where one agent hands off to the next agent. Each agent has exactly one parent, and the work moves in a single direction from the first agent to the last agent.
+A chain system is a linear workflow where agents execute in sequence. Each agent receives input from the previous agent and passes output to the next. The work flows in one direction from start to finish.
 
 ![Chain agent system diagram](/img/chain.png)
 
-## How to Track It
-Create a parent task and use `task.child()` for each step in the chain to preserve order and lineage.
+## When to Use
+
+Chain systems work well for:
+
+- **Sequential processing** - Tasks with clear stages (extract → transform → validate)
+- **Pipeline workflows** - Each step builds on the previous step's output
+- **Quality gates** - Agents that check or refine the work of previous agents
+
+## How Marlo Tracks It
+
+Create a parent task and use `task.child()` for each step in the chain. This preserves the order and lineage of the workflow.
+
+### Python
+
+```python
+with marlo.task(thread_id=thread_id, agent="pipeline") as pipeline:
+    pipeline.input(raw_data)
+    
+    # Step 1: Extract
+    with pipeline.child(agent="extractor") as step1:
+        step1.input(raw_data)
+        extracted = extract_data(raw_data)
+        step1.output(extracted)
+    
+    # Step 2: Transform
+    with pipeline.child(agent="transformer") as step2:
+        step2.input(extracted)
+        transformed = transform_data(extracted)
+        step2.output(transformed)
+    
+    # Step 3: Validate
+    with pipeline.child(agent="validator") as step3:
+        step3.input(transformed)
+        validated = validate_data(transformed)
+        step3.output(validated)
+    
+    pipeline.output(validated)
+```
+
+### TypeScript
+
+```typescript
+const pipeline = marlo.task(threadId, 'pipeline').start();
+pipeline.input(rawData);
+
+// Step 1: Extract
+const step1 = pipeline.child('extractor').start();
+step1.input(rawData);
+const extracted = extractData(rawData);
+step1.output(extracted);
+step1.end();
+
+// Step 2: Transform
+const step2 = pipeline.child('transformer').start();
+step2.input(extracted);
+const transformed = transformData(extracted);
+step2.output(transformed);
+step2.end();
+
+// Step 3: Validate
+const step3 = pipeline.child('validator').start();
+step3.input(transformed);
+const validated = validateData(transformed);
+step3.output(validated);
+step3.end();
+
+pipeline.output(validated);
+pipeline.end();
+```
+
+## What You See in the Dashboard
+
+The dashboard shows the chain as a sequence of child tasks:
+
+```
+📁 Task: "Process document" (pipeline)
+├── 📄 Input: [raw document]
+├── 📁 Child Task (extractor)
+│   ├── 📄 Input: [raw document]
+│   └── 📄 Output: [extracted data]
+├── 📁 Child Task (transformer)
+│   ├── 📄 Input: [extracted data]
+│   └── 📄 Output: [transformed data]
+├── 📁 Child Task (validator)
+│   ├── 📄 Input: [transformed data]
+│   └── 📄 Output: [validated data]
+└── 📄 Output: [validated data]
+```
+
+Each agent in the chain develops its own learnings:
+- The extractor learns parsing patterns
+- The transformer learns data manipulation
+- The validator learns quality checks
+
+## Example: Document Processing Pipeline
+
+```python
+# Register chain agents
+marlo.agent(name="extractor", system_prompt="You extract structured data from documents.", ...)
+marlo.agent(name="transformer", system_prompt="You clean and normalize data.", ...)
+marlo.agent(name="validator", system_prompt="You validate data quality.", ...)
+
+def process_document(document: str, thread_id: str):
+    with marlo.task(thread_id=thread_id, agent="pipeline") as pipeline:
+        pipeline.input(document)
+        
+        # Chain of processing
+        with pipeline.child(agent="extractor") as ext:
+            ext.input(document)
+            data = extract(document)
+            ext.output(data)
+        
+        with pipeline.child(agent="transformer") as trans:
+            trans.input(data)
+            clean_data = transform(data)
+            trans.output(clean_data)
+        
+        with pipeline.child(agent="validator") as val:
+            val.input(clean_data)
+            result = validate(clean_data)
+            val.output(result)
+        
+        pipeline.output(result)
+        return result
+```
+
+## Best Practices
+
+- **Clear handoffs** - Each agent's output should be a complete input for the next
+- **Error handling** - Consider what happens if a step fails mid-chain
+- **Idempotency** - Design steps to be safely re-runnable when possible
+- **Log intermediate outputs** - Helps debug where things went wrong

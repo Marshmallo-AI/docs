@@ -4,9 +4,160 @@ sidebar_position: 4
 
 # Graph
 
-A graph system is a flexible workflow where agents can connect in many directions, not just in a straight line. You define the connections between agents explicitly, and the system can include branches, merges, and feedback loops. 
+A graph system is a flexible workflow where agents can connect in any direction. Unlike chains (linear) or orchestrators (hub-and-spoke), graphs support branches, merges, cycles, and conditional routing. You define the connections explicitly, and the system follows them dynamically.
 
 ![Graph agent system diagram](/img/graph.png)
 
-## How to Track It
-Use `task.child()` for each node execution. Store edge or routing info in task metadata if you need explicit graph structure.
+## When to Use
+
+Graph systems work well for:
+
+- **Complex workflows** - Tasks with conditional logic and multiple paths
+- **Iterative refinement** - Cycles where agents review and improve each other's work
+- **Dynamic routing** - When the next step depends on the current output
+- **LangGraph-style agents** - State machines with explicit node transitions
+
+## How Marlo Tracks It
+
+Use `task.child()` for each node execution. Store routing information in task metadata if you need to preserve the explicit graph structure.
+
+### Python
+
+```python
+with marlo.task(thread_id=thread_id, agent="graph-runner") as graph:
+    graph.input(initial_state)
+    
+    current_node = "start"
+    state = initial_state
+    
+    while current_node != "end":
+        # Execute current node as a child task
+        with graph.child(agent=current_node) as node:
+            node.input(state)
+            state = execute_node(current_node, state)
+            node.output(state)
+        
+        # Determine next node based on state
+        current_node = get_next_node(current_node, state)
+    
+    graph.output(state)
+```
+
+### TypeScript
+
+```typescript
+const graph = marlo.task(threadId, 'graph-runner').start();
+graph.input(initialState);
+
+let currentNode = 'start';
+let state = initialState;
+
+while (currentNode !== 'end') {
+  // Execute current node as a child task
+  const node = graph.child(currentNode).start();
+  node.input(state);
+  state = await executeNode(currentNode, state);
+  node.output(state);
+  node.end();
+  
+  // Determine next node based on state
+  currentNode = getNextNode(currentNode, state);
+}
+
+graph.output(state);
+graph.end();
+```
+
+## What You See in the Dashboard
+
+The dashboard shows all node executions as child tasks, capturing the actual path taken:
+
+```
+📁 Task: "Process request" (graph-runner)
+├── 📄 Input: [initial state]
+├── 📁 Child Task (classifier)
+│   ├── 📄 Input: [state v1]
+│   └── 📄 Output: [state v2, route=complex]
+├── 📁 Child Task (analyzer)
+│   ├── 📄 Input: [state v2]
+│   └── 📄 Output: [state v3]
+├── 📁 Child Task (reviewer)
+│   ├── 📄 Input: [state v3]
+│   └── 📄 Output: [state v4, needs_revision=true]
+├── 📁 Child Task (analyzer)  ← Re-executed due to cycle
+│   ├── 📄 Input: [state v4]
+│   └── 📄 Output: [state v5]
+├── 📁 Child Task (reviewer)
+│   ├── 📄 Input: [state v5]
+│   └── 📄 Output: [state v6, needs_revision=false]
+└── 📄 Output: [final state]
+```
+
+Each node agent develops its own learnings based on all its executions across all graph runs.
+
+## Example: Review Cycle with LangGraph
+
+```python
+from langgraph.graph import StateGraph
+
+# Register node agents
+marlo.agent(name="drafter", system_prompt="You write initial drafts.", ...)
+marlo.agent(name="reviewer", system_prompt="You review and critique drafts.", ...)
+marlo.agent(name="reviser", system_prompt="You improve drafts based on feedback.", ...)
+
+def run_review_cycle(request: str, thread_id: str):
+    with marlo.task(thread_id=thread_id, agent="review-graph") as graph:
+        graph.input(request)
+        
+        # Draft
+        with graph.child(agent="drafter") as drafter:
+            drafter.input(request)
+            draft = create_draft(request)
+            drafter.output(draft)
+        
+        # Review loop
+        approved = False
+        while not approved:
+            with graph.child(agent="reviewer") as reviewer:
+                reviewer.input(draft)
+                feedback = review_draft(draft)
+                reviewer.output(feedback)
+            
+            if feedback["approved"]:
+                approved = True
+            else:
+                with graph.child(agent="reviser") as reviser:
+                    reviser.input({"draft": draft, "feedback": feedback})
+                    draft = revise_draft(draft, feedback)
+                    reviser.output(draft)
+        
+        graph.output(draft)
+        return draft
+```
+
+## Recording Graph Structure
+
+If you need to preserve the explicit graph edges (not just the execution path), include routing metadata:
+
+```python
+with graph.child(agent="classifier") as node:
+    node.input(state)
+    result, next_node = classify(state)
+    node.output({
+        "result": result,
+        "routing": {
+            "from": "classifier",
+            "to": next_node,
+            "reason": "Classified as complex query"
+        }
+    })
+```
+
+This metadata appears in the trace and helps you understand routing decisions.
+
+## Best Practices
+
+- **Limit cycles** - Add maximum iteration counts to prevent infinite loops
+- **Log routing decisions** - Record why each transition was chosen
+- **Unique thread IDs** - Each graph execution should have a unique thread ID
+- **State immutability** - Treat state as immutable; create new state objects at each step

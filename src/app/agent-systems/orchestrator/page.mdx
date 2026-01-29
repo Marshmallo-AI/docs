@@ -4,9 +4,112 @@ sidebar_position: 2
 
 # Orchestrator
 
-An orchestrator system has one root agent that coordinates the task and delegates work to several specialized agents. The root agent decides which sub‑agent to call, collects their outputs, and produces the final response. 
+An orchestrator system has one root agent that coordinates the task and delegates work to specialized sub-agents. The orchestrator decides which sub-agent to call, collects their outputs, and produces the final response.
 
 ![Orchestrator agent system diagram](/img/orchestrator.png)
 
-## How to Track It
-Use `task.child()` for each delegated agent run. The SDK links child traces to the parent automatically.
+## When to Use
+
+Orchestrator systems work well for:
+
+- **Complex tasks** - Problems that benefit from multiple specialized perspectives
+- **Division of labor** - When different skills (research, writing, analysis) should be isolated
+- **Quality through specialization** - Sub-agents can be optimized for narrow tasks
+
+## How Marlo Tracks It
+
+Use `task.child()` to create child tasks for each sub-agent. The SDK automatically links child traces to the parent, creating a hierarchy in the dashboard.
+
+### Python
+
+```python
+with marlo.task(thread_id=thread_id, agent="orchestrator") as parent:
+    parent.input(user_request)
+    parent.reasoning("I'll delegate research to the researcher agent.")
+    
+    # Delegate to child agent
+    with parent.child(agent="researcher") as child:
+        child.input("Find information about: " + user_request)
+        # Child does its work...
+        child.output(research_findings)
+    
+    # Use child's results
+    parent.output("Based on research: " + research_findings)
+```
+
+### TypeScript
+
+```typescript
+const parent = marlo.task(threadId, 'orchestrator').start();
+parent.input(userRequest);
+parent.reasoning("I'll delegate research to the researcher agent.");
+
+// Delegate to child agent
+const child = parent.child('researcher').start();
+child.input('Find information about: ' + userRequest);
+// Child does its work...
+child.output(researchFindings);
+child.end();
+
+// Use child's results
+parent.output('Based on research: ' + researchFindings);
+parent.end();
+```
+
+## What You See in the Dashboard
+
+The dashboard shows a hierarchical view:
+
+```
+📁 Task: "Research AI trends" (orchestrator)
+├── 📄 Input: "What are the latest AI trends?"
+├── 📝 Reasoning: "I'll delegate to researcher, then synthesize"
+├── 📁 Child Task (researcher)
+│   ├── 📄 Input: "Find information about AI trends"
+│   ├── 🔧 Tool: web_search(...)
+│   └── 📄 Output: "Found 3 sources..."
+├── 📁 Child Task (writer)
+│   ├── 📄 Input: "Summarize findings..."
+│   └── 📄 Output: "Summary..."
+└── 📄 Output: "Based on my research..."
+```
+
+Each agent develops its own learnings independently:
+- The orchestrator learns coordination patterns
+- The researcher learns search strategies
+- The writer learns summarization techniques
+
+## Example: Research Assistant
+
+```python
+# Register all agents
+marlo.agent(name="orchestrator", system_prompt="You coordinate research tasks.", ...)
+marlo.agent(name="researcher", system_prompt="You search and gather information.", ...)
+marlo.agent(name="writer", system_prompt="You write clear summaries.", ...)
+
+def research_topic(request: str, thread_id: str):
+    with marlo.task(thread_id=thread_id, agent="orchestrator") as parent:
+        parent.input(request)
+        
+        # Step 1: Research
+        with parent.child(agent="researcher") as researcher:
+            researcher.input("Research: " + request)
+            findings = do_research(request)
+            researcher.output(findings)
+        
+        # Step 2: Write summary
+        with parent.child(agent="writer") as writer:
+            writer.input("Summarize: " + findings)
+            summary = write_summary(findings)
+            writer.output(summary)
+        
+        parent.output(summary)
+        return summary
+```
+
+## Best Practices
+
+- **Register all agents** before using them in tasks
+- **Log orchestrator reasoning** to capture delegation decisions
+- **Keep sub-agents focused** on single responsibilities
+- **Pass clear context** to child agents about what they should do

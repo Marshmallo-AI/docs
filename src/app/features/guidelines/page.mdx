@@ -1,0 +1,156 @@
+---
+sidebar_position: 4
+---
+
+# Guidelines
+
+Guidelines are accumulated user feedback that steers how Marlo's reward and learning systems evolve. When you provide feedback on rewards or learnings, that feedback becomes a guideline that shapes future generations.
+
+## Why Guidelines Matter
+
+Automated systems are only as good as their alignment with your goals. The reward model might score tasks in ways that don't match your priorities. The learning system might generate guidance that misses important nuances in your domain.
+
+Guidelines solve this by capturing your corrections and preferences over time. Each piece of feedback you provide teaches Marlo what you actually care about. The more feedback you give, the more aligned the system becomes with your expectations.
+
+This creates personalized intelligence: the same underlying models, but tuned specifically to your agents and your use cases.
+
+## How Guidelines Work
+
+Guidelines accumulate from two sources: feedback on rewards and feedback on learnings. Both follow the same pattern—your input becomes guidance for future generations.
+
+### Reward Guidelines
+
+When you provide feedback on a reward evaluation, that feedback becomes a guideline for the reward model:
+
+1. **Initial Reward**: Marlo automatically generates a reward score and rationale for a task.
+
+2. **User Feedback**: You review the reward in the dashboard. If the evaluation doesn't match your assessment, you adjust the score or rationale.
+
+3. **Guideline Creation**: Your adjustment is stored as a reward guideline, capturing what the reward model got wrong and how it should evaluate similar tasks.
+
+4. **Future Rewards**: When the reward model evaluates similar tasks, it considers your guidelines. Instead of purely automated scoring, rewards are generated with awareness of your past corrections.
+
+5. **Accumulation**: As you provide more feedback, guidelines accumulate. The reward model becomes increasingly aligned with your evaluation criteria.
+
+### Learning Guidelines
+
+When you interact with learnings—accepting, rejecting, or editing them—your actions become guidelines for the learning system:
+
+1. **Learning Generated**: Marlo automatically generates a learning from a task outcome.
+
+2. **User Action**: In the dashboard, you can:
+   - **Activate**: Accept the learning as-is (reinforces the learning system's approach)
+   - **Reject**: Decline the learning with a reason (teaches the system what to avoid generating)
+   - **Edit**: Modify the learning before activating (teaches the system your preferred framing)
+
+3. **Guideline Creation**: 
+   - Rejections create negative guidelines with your reasoning, telling the learning system to avoid similar outputs.
+   - Edits create positive guidelines showing the transformation from generated to preferred form.
+
+4. **Future Learnings**: When the learning system generates new learnings, it considers your guidelines. Generated learnings start to match your style and avoid patterns you've rejected.
+
+5. **Accumulation**: Over time, the learning system adapts to your preferences for how guidance should be written and what kinds of learnings are valuable.
+
+## Viewing Guidelines in the Dashboard
+
+Access your accumulated guidelines from the dashboard:
+
+1. Navigate to your project.
+2. Click **Guidelines** in the sidebar.
+3. Filter by type: **Reward Guidelines** or **Learning Guidelines**.
+4. Review individual guidelines to see the original output, your feedback, and how it's being applied.
+
+### Reward Guidelines View
+
+Each reward guideline shows:
+
+- **Original Reward**: The automated score and rationale before your feedback.
+- **Your Feedback**: The adjusted score, updated rationale, or additional notes you provided.
+- **Task Reference**: Link to the task that triggered this guideline.
+- **Created Date**: When you provided the feedback.
+- **Impact**: How many subsequent rewards have been influenced by this guideline.
+
+### Learning Guidelines View
+
+Each learning guideline shows:
+
+- **Action Type**: Whether you rejected or edited the learning.
+- **Original Learning**: What the system generated.
+- **Your Input**: For rejections, your reason. For edits, your revised version.
+- **Task Reference**: Link to the task that generated the original learning.
+- **Created Date**: When you provided the feedback.
+- **Impact**: How many subsequent learnings have been influenced by this guideline.
+
+## Managing Guidelines
+
+Guidelines accumulate automatically, but you can also manage them directly.
+
+### Removing a Guideline
+
+If a guideline is no longer relevant or was created by mistake:
+
+1. Click on the guideline to open its details.
+2. Click **Remove**.
+3. Confirm the removal.
+
+Removed guidelines stop influencing future generations immediately.
+
+### Editing a Guideline
+
+To refine a guideline without removing it:
+
+1. Click on the guideline to open its details.
+2. Click **Edit**.
+3. Update your feedback or reasoning.
+4. Click **Save**.
+
+The updated guideline will influence future generations with your revised input.
+
+### Bulk Management
+
+For managing multiple guidelines:
+
+1. In the Guidelines view, use filters to find guidelines by date, type, or agent.
+2. Select multiple guidelines using checkboxes.
+3. Use bulk actions to remove or export selected guidelines.
+
+## Best Practices
+
+### Providing Effective Reward Feedback
+
+- **Be specific about why**: Don't just change the score—explain what the evaluation missed.
+- **Reference the trace**: Point to specific steps that support your assessment.
+- **Be consistent**: Similar tasks should get similar evaluations. Contradictory feedback confuses the system.
+- **Focus on patterns**: Feedback on recurring issues has more impact than one-off corrections.
+
+### Providing Effective Learning Feedback
+
+- **Reject with reasons**: A rejection without explanation doesn't teach the system much. Always include why.
+- **Edit for clarity**: If a learning is mostly right but poorly phrased, edit it rather than rejecting.
+- **Consider scope**: Reject learnings that are too specific (won't generalize) or too vague (not actionable).
+- **Match your style**: Edit learnings to match how you'd naturally write guidance for your agents.
+
+### Monitoring Guideline Health
+
+- **Review periodically**: Check your guidelines monthly to remove outdated ones.
+- **Watch for conflicts**: Contradictory guidelines can degrade quality. Resolve conflicts by removing or editing.
+- **Track impact**: Use the impact metrics to see which guidelines are actively shaping outputs.
+- **Balance quantity**: Too few guidelines means limited personalization. Too many can over-constrain the system.
+
+## Guidelines and Multi-Agent Systems
+
+In multi-agent systems, guidelines are scoped by agent:
+
+- **Reward Guidelines**: Apply to rewards for the specific agent whose task you provided feedback on.
+- **Learning Guidelines**: Apply to learnings generated for the specific agent whose learning you adjusted.
+
+This means you can have different evaluation criteria and learning styles for different agents in the same project. An orchestrator agent might need different guidance than a specialized tool-using agent.
+
+## Connection to Rewards and Learnings
+
+Guidelines don't replace the automated systems—they enhance them:
+
+- **Rewards** are still generated automatically for every task. Guidelines influence *how* they're generated.
+- **Learnings** are still generated automatically from rewards. Guidelines influence *what* gets generated and *how* it's framed.
+
+Think of guidelines as your ongoing conversation with Marlo's intelligence. Each piece of feedback makes the system a little more aligned with how you think about your agents' performance and improvement.

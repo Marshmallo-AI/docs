@@ -20,7 +20,7 @@ const footer = <Footer>MIT {new Date().getFullYear()} © Marshmallo.</Footer>
  
 const rootOrder = ['index', 'page', 'getting-started', 'sdk', 'features', 'agent-systems']
 const sdkOrder = ['page', 'python', 'typescript', 'http']
-const featuresOrder = ['page', 'tracing', 'rewards', 'learning', 'copilot', 'simulation', 'reports']
+const featuresOrder = ['page', 'tracing', 'rewards', 'learning', 'guidelines', 'copilot', 'simulation', 'reports']
 const agentSystemsOrder = ['page', 'single-agent', 'orchestrator', 'chain', 'graph']
 
 const toKey = (item: PageMapItem) => {

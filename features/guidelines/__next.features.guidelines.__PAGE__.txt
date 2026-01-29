@@ -1,0 +1,209 @@
+1:"$Sreact.fragment"
+2:I[55169,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"TOCProvider"]
+3:I[769,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"Sidebar"]
+4:I[47486,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"ClientWrapper"]
+9:I[63894,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/014d3a509c2c44a0.js","/_next/static/chunks/3a4fb10029fc91d1.js","/_next/static/chunks/e0afa020722afb62.js"],"HeadingAnchor"]
+34:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/7340adf74ff47ec0.js"],"OutletBoundary"]
+35:"$Sreact.suspense"
+5:T1e13,---
+sidebar_position: 4
+---
+
+# Guidelines
+
+Guidelines are accumulated user feedback that steers how Marlo's reward and learning systems evolve. When you provide feedback on rewards or learnings, that feedback becomes a guideline that shapes future generations.
+
+## Why Guidelines Matter
+
+Automated systems are only as good as their alignment with your goals. The reward model might score tasks in ways that don't match your priorities. The learning system might generate guidance that misses important nuances in your domain.
+
+Guidelines solve this by capturing your corrections and preferences over time. Each piece of feedback you provide teaches Marlo what you actually care about. The more feedback you give, the more aligned the system becomes with your expectations.
+
+This creates personalized intelligence: the same underlying models, but tuned specifically to your agents and your use cases.
+
+## How Guidelines Work
+
+Guidelines accumulate from two sources: feedback on rewards and feedback on learnings. Both follow the same pattern—your input becomes guidance for future generations.
+
+### Reward Guidelines
+
+When you provide feedback on a reward evaluation, that feedback becomes a guideline for the reward model:
+
+1. **Initial Reward**: Marlo automatically generates a reward score and rationale for a task.
+
+2. **User Feedback**: You review the reward in the dashboard. If the evaluation doesn't match your assessment, you adjust the score or rationale.
+
+3. **Guideline Creation**: Your adjustment is stored as a reward guideline, capturing what the reward model got wrong and how it should evaluate similar tasks.
+
+4. **Future Rewards**: When the reward model evaluates similar tasks, it considers your guidelines. Instead of purely automated scoring, rewards are generated with awareness of your past corrections.
+
+5. **Accumulation**: As you provide more feedback, guidelines accumulate. The reward model becomes increasingly aligned with your evaluation criteria.
+
+### Learning Guidelines
+
+When you interact with learnings—accepting, rejecting, or editing them—your actions become guidelines for the learning system:
+
+1. **Learning Generated**: Marlo automatically generates a learning from a task outcome.
+
+2. **User Action**: In the dashboard, you can:
+   - **Activate**: Accept the learning as-is (reinforces the learning system's approach)
+   - **Reject**: Decline the learning with a reason (teaches the system what to avoid generating)
+   - **Edit**: Modify the learning before activating (teaches the system your preferred framing)
+
+3. **Guideline Creation**: 
+   - Rejections create negative guidelines with your reasoning, telling the learning system to avoid similar outputs.
+   - Edits create positive guidelines showing the transformation from generated to preferred form.
+
+4. **Future Learnings**: When the learning system generates new learnings, it considers your guidelines. Generated learnings start to match your style and avoid patterns you've rejected.
+
+5. **Accumulation**: Over time, the learning system adapts to your preferences for how guidance should be written and what kinds of learnings are valuable.
+
+## Viewing Guidelines in the Dashboard
+
+Access your accumulated guidelines from the dashboard:
+
+1. Navigate to your project.
+2. Click **Guidelines** in the sidebar.
+3. Filter by type: **Reward Guidelines** or **Learning Guidelines**.
+4. Review individual guidelines to see the original output, your feedback, and how it's being applied.
+
+### Reward Guidelines View
+
+Each reward guideline shows:
+
+- **Original Reward**: The automated score and rationale before your feedback.
+- **Your Feedback**: The adjusted score, updated rationale, or additional notes you provided.
+- **Task Reference**: Link to the task that triggered this guideline.
+- **Created Date**: When you provided the feedback.
+- **Impact**: How many subsequent rewards have been influenced by this guideline.
+
+### Learning Guidelines View
+
+Each learning guideline shows:
+
+- **Action Type**: Whether you rejected or edited the learning.
+- **Original Learning**: What the system generated.
+- **Your Input**: For rejections, your reason. For edits, your revised version.
+- **Task Reference**: Link to the task that generated the original learning.
+- **Created Date**: When you provided the feedback.
+- **Impact**: How many subsequent learnings have been influenced by this guideline.
+
+## Managing Guidelines
+
+Guidelines accumulate automatically, but you can also manage them directly.
+
+### Removing a Guideline
+
+If a guideline is no longer relevant or was created by mistake:
+
+1. Click on the guideline to open its details.
+2. Click **Remove**.
+3. Confirm the removal.
+
+Removed guidelines stop influencing future generations immediately.
+
+### Editing a Guideline
+
+To refine a guideline without removing it:
+
+1. Click on the guideline to open its details.
+2. Click **Edit**.
+3. Update your feedback or reasoning.
+4. Click **Save**.
+
+The updated guideline will influence future generations with your revised input.
+
+### Bulk Management
+
+For managing multiple guidelines:
+
+1. In the Guidelines view, use filters to find guidelines by date, type, or agent.
+2. Select multiple guidelines using checkboxes.
+3. Use bulk actions to remove or export selected guidelines.
+
+## Best Practices
+
+### Providing Effective Reward Feedback
+
+- **Be specific about why**: Don't just change the score—explain what the evaluation missed.
+- **Reference the trace**: Point to specific steps that support your assessment.
+- **Be consistent**: Similar tasks should get similar evaluations. Contradictory feedback confuses the system.
+- **Focus on patterns**: Feedback on recurring issues has more impact than one-off corrections.
+
+### Providing Effective Learning Feedback
+
+- **Reject with reasons**: A rejection without explanation doesn't teach the system much. Always include why.
+- **Edit for clarity**: If a learning is mostly right but poorly phrased, edit it rather than rejecting.
+- **Consider scope**: Reject learnings that are too specific (won't generalize) or too vague (not actionable).
+- **Match your style**: Edit learnings to match how you'd naturally write guidance for your agents.
+
+### Monitoring Guideline Health
+
+- **Review periodically**: Check your guidelines monthly to remove outdated ones.
+- **Watch for conflicts**: Contradictory guidelines can degrade quality. Resolve conflicts by removing or editing.
+- **Track impact**: Use the impact metrics to see which guidelines are actively shaping outputs.
+- **Balance quantity**: Too few guidelines means limited personalization. Too many can over-constrain the system.
+
+## Guidelines and Multi-Agent Systems
+
+In multi-agent systems, guidelines are scoped by agent:
+
+- **Reward Guidelines**: Apply to rewards for the specific agent whose task you provided feedback on.
+- **Learning Guidelines**: Apply to learnings generated for the specific agent whose learning you adjusted.
+
+This means you can have different evaluation criteria and learning styles for different agents in the same project. An orchestrator agent might need different guidance than a specialized tool-using agent.
+
+## Connection to Rewards and Learnings
+
+Guidelines don't replace the automated systems—they enhance them:
+
+- **Rewards** are still generated automatically for every task. Guidelines influence *how* they're generated.
+- **Learnings** are still generated automatically from rewards. Guidelines influence *what* gets generated and *how* it's framed.
+
+Think of guidelines as your ongoing conversation with Marlo's intelligence. Each piece of feedback makes the system a little more aligned with how you think about your agents' performance and improvement.0:{"buildId":"wFcfLgSigkzSlvSoQFV4w","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Why Guidelines Matter","id":"why-guidelines-matter","depth":2},{"value":"How Guidelines Work","id":"how-guidelines-work","depth":2},{"value":"Reward Guidelines","id":"reward-guidelines","depth":3},{"value":"Learning Guidelines","id":"learning-guidelines","depth":3},{"value":"Viewing Guidelines in the Dashboard","id":"viewing-guidelines-in-the-dashboard","depth":2},{"value":"Reward Guidelines View","id":"reward-guidelines-view","depth":3},{"value":"Learning Guidelines View","id":"learning-guidelines-view","depth":3},{"value":"Managing Guidelines","id":"managing-guidelines","depth":2},{"value":"Removing a Guideline","id":"removing-a-guideline","depth":3},{"value":"Editing a Guideline","id":"editing-a-guideline","depth":3},{"value":"Bulk Management","id":"bulk-management","depth":3},{"value":"Best Practices","id":"best-practices","depth":2},{"value":"Providing Effective Reward Feedback","id":"providing-effective-reward-feedback","depth":3},{"value":"Providing Effective Learning Feedback","id":"providing-effective-learning-feedback","depth":3},{"value":"Monitoring Guideline Health","id":"monitoring-guideline-health","depth":3},{"value":"Guidelines and Multi-Agent Systems","id":"guidelines-and-multi-agent-systems","depth":2},{"value":"Connection to Rewards and Learnings","id":"connection-to-rewards-and-learnings","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"sidebar_position":4,"title":"Guidelines","filePath":"src/app/features/guidelines/page.mdx","timestamp":1769700648000},"sourceCode":"$5","children":["$L6","$L7"]}]]}]}],null,"$L8"]}],"loading":null,"isPartial":false}
+6:["$","div",null,{"id":"nextra-skip-nav"}]
+7:["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Guidelines","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Guidelines are accumulated user feedback that steers how Marlo’s reward and learning systems evolve. When you provide feedback on rewards or learnings, that feedback becomes a guideline that shapes future generations."}],"\n",["$","h2",null,{"id":"why-guidelines-matter","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Why Guidelines Matter",["$","$L9",null,{"id":"why-guidelines-matter"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Automated systems are only as good as their alignment with your goals. The reward model might score tasks in ways that don’t match your priorities. The learning system might generate guidance that misses important nuances in your domain."}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Guidelines solve this by capturing your corrections and preferences over time. Each piece of feedback you provide teaches Marlo what you actually care about. The more feedback you give, the more aligned the system becomes with your expectations."}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"This creates personalized intelligence: the same underlying models, but tuned specifically to your agents and your use cases."}],"\n",["$","h2",null,{"id":"how-guidelines-work","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["How Guidelines Work",["$","$L9",null,{"id":"how-guidelines-work"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Guidelines accumulate from two sources: feedback on rewards and feedback on learnings. Both follow the same pattern—your input becomes guidance for future generations."}],"\n",["$","h3",null,{"id":"reward-guidelines","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Reward Guidelines",["$","$L9",null,{"id":"reward-guidelines"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"When you provide feedback on a reward evaluation, that feedback becomes a guideline for the reward model:"}],"\n",["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Initial Reward"}],": Marlo automatically generates a reward score and rationale for a task."]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"User Feedback"}],": You review the reward in the dashboard. If the evaluation doesn’t match your assessment, you adjust the score or rationale."]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Guideline Creation"}],": Your adjustment is stored as a reward guideline, capturing what the reward model got wrong and how it should evaluate similar tasks."]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n","$La","\n"]}],"\n","$Lb","\n"]}],"\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19","\n","$L1a","\n","$L1b","\n","$L1c","\n","$L1d","\n","$L1e","\n","$L1f","\n","$L20","\n","$L21","\n","$L22","\n","$L23","\n","$L24","\n","$L25","\n","$L26","\n","$L27","\n","$L28","\n","$L29","\n","$L2a","\n","$L2b","\n","$L2c","\n","$L2d","\n","$L2e","\n","$L2f","\n","$L30","\n","$L31","\n","$L32","\n","$L33"]}]
+8:["$","$L34",null,{"children":["$","$35",null,{"name":"Next.MetadataOutlet","children":"$@36"}]}]
+a:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Future Rewards"}],": When the reward model evaluates similar tasks, it considers your guidelines. Instead of purely automated scoring, rewards are generated with awareness of your past corrections."]}]
+b:["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Accumulation"}],": As you provide more feedback, guidelines accumulate. The reward model becomes increasingly aligned with your evaluation criteria."]}],"\n"]}]
+c:["$","h3",null,{"id":"learning-guidelines","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Learning Guidelines",["$","$L9",null,{"id":"learning-guidelines"}]]}]
+d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"When you interact with learnings—accepting, rejecting, or editing them—your actions become guidelines for the learning system:"}]
+e:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Learning Generated"}],": Marlo automatically generates a learning from a task outcome."]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"User Action"}],": In the dashboard, you can:"]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Activate"}],": Accept the learning as-is (reinforces the learning system’s approach)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Reject"}],": Decline the learning with a reason (teaches the system what to avoid generating)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Edit"}],": Modify the learning before activating (teaches the system your preferred framing)"]}],"\n"]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Guideline Creation"}],":"]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Rejections create negative guidelines with your reasoning, telling the learning system to avoid similar outputs."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Edits create positive guidelines showing the transformation from generated to preferred form."}],"\n"]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Future Learnings"}],": When the learning system generates new learnings, it considers your guidelines. Generated learnings start to match your style and avoid patterns you’ve rejected."]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Accumulation"}],": Over time, the learning system adapts to your preferences for how guidance should be written and what kinds of learnings are valuable."]}],"\n"]}],"\n"]}]
+f:["$","h2",null,{"id":"viewing-guidelines-in-the-dashboard","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Viewing Guidelines in the Dashboard",["$","$L9",null,{"id":"viewing-guidelines-in-the-dashboard"}]]}]
+10:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Access your accumulated guidelines from the dashboard:"}]
+11:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Navigate to your project."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Click ",["$","strong",null,{"children":"Guidelines"}]," in the sidebar."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Filter by type: ",["$","strong",null,{"children":"Reward Guidelines"}]," or ",["$","strong",null,{"children":"Learning Guidelines"}],"."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Review individual guidelines to see the original output, your feedback, and how it’s being applied."}],"\n"]}]
+12:["$","h3",null,{"id":"reward-guidelines-view","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Reward Guidelines View",["$","$L9",null,{"id":"reward-guidelines-view"}]]}]
+13:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Each reward guideline shows:"}]
+14:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Original Reward"}],": The automated score and rationale before your feedback."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Your Feedback"}],": The adjusted score, updated rationale, or additional notes you provided."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Task Reference"}],": Link to the task that triggered this guideline."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Created Date"}],": When you provided the feedback."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Impact"}],": How many subsequent rewards have been influenced by this guideline."]}],"\n"]}]
+15:["$","h3",null,{"id":"learning-guidelines-view","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Learning Guidelines View",["$","$L9",null,{"id":"learning-guidelines-view"}]]}]
+16:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Each learning guideline shows:"}]
+17:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Action Type"}],": Whether you rejected or edited the learning."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Original Learning"}],": What the system generated."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Your Input"}],": For rejections, your reason. For edits, your revised version."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Task Reference"}],": Link to the task that generated the original learning."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Created Date"}],": When you provided the feedback."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Impact"}],": How many subsequent learnings have been influenced by this guideline."]}],"\n"]}]
+18:["$","h2",null,{"id":"managing-guidelines","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Managing Guidelines",["$","$L9",null,{"id":"managing-guidelines"}]]}]
+19:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Guidelines accumulate automatically, but you can also manage them directly."}]
+1a:["$","h3",null,{"id":"removing-a-guideline","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Removing a Guideline",["$","$L9",null,{"id":"removing-a-guideline"}]]}]
+1b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"If a guideline is no longer relevant or was created by mistake:"}]
+1c:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Click on the guideline to open its details."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Click ",["$","strong",null,{"children":"Remove"}],"."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Confirm the removal."}],"\n"]}]
+1d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Removed guidelines stop influencing future generations immediately."}]
+1e:["$","h3",null,{"id":"editing-a-guideline","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Editing a Guideline",["$","$L9",null,{"id":"editing-a-guideline"}]]}]
+1f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"To refine a guideline without removing it:"}]
+20:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Click on the guideline to open its details."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Click ",["$","strong",null,{"children":"Edit"}],"."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Update your feedback or reasoning."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Click ",["$","strong",null,{"children":"Save"}],"."]}],"\n"]}]
+21:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"The updated guideline will influence future generations with your revised input."}]
+22:["$","h3",null,{"id":"bulk-management","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Bulk Management",["$","$L9",null,{"id":"bulk-management"}]]}]
+23:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"For managing multiple guidelines:"}]
+24:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"In the Guidelines view, use filters to find guidelines by date, type, or agent."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Select multiple guidelines using checkboxes."}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Use bulk actions to remove or export selected guidelines."}],"\n"]}]
+25:["$","h2",null,{"id":"best-practices","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Best Practices",["$","$L9",null,{"id":"best-practices"}]]}]
+26:["$","h3",null,{"id":"providing-effective-reward-feedback","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Providing Effective Reward Feedback",["$","$L9",null,{"id":"providing-effective-reward-feedback"}]]}]
+27:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Be specific about why"}],": Don’t just change the score—explain what the evaluation missed."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Reference the trace"}],": Point to specific steps that support your assessment."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Be consistent"}],": Similar tasks should get similar evaluations. Contradictory feedback confuses the system."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Focus on patterns"}],": Feedback on recurring issues has more impact than one-off corrections."]}],"\n"]}]
+28:["$","h3",null,{"id":"providing-effective-learning-feedback","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Providing Effective Learning Feedback",["$","$L9",null,{"id":"providing-effective-learning-feedback"}]]}]
+29:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Reject with reasons"}],": A rejection without explanation doesn’t teach the system much. Always include why."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Edit for clarity"}],": If a learning is mostly right but poorly phrased, edit it rather than rejecting."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Consider scope"}],": Reject learnings that are too specific (won’t generalize) or too vague (not actionable)."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Match your style"}],": Edit learnings to match how you’d naturally write guidance for your agents."]}],"\n"]}]
+2a:["$","h3",null,{"id":"monitoring-guideline-health","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Monitoring Guideline Health",["$","$L9",null,{"id":"monitoring-guideline-health"}]]}]
+2b:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Review periodically"}],": Check your guidelines monthly to remove outdated ones."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Watch for conflicts"}],": Contradictory guidelines can degrade quality. Resolve conflicts by removing or editing."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Track impact"}],": Use the impact metrics to see which guidelines are actively shaping outputs."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Balance quantity"}],": Too few guidelines means limited personalization. Too many can over-constrain the system."]}],"\n"]}]
+2c:["$","h2",null,{"id":"guidelines-and-multi-agent-systems","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Guidelines and Multi-Agent Systems",["$","$L9",null,{"id":"guidelines-and-multi-agent-systems"}]]}]
+2d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"In multi-agent systems, guidelines are scoped by agent:"}]
+2e:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Reward Guidelines"}],": Apply to rewards for the specific agent whose task you provided feedback on."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Learning Guidelines"}],": Apply to learnings generated for the specific agent whose learning you adjusted."]}],"\n"]}]
+2f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"This means you can have different evaluation criteria and learning styles for different agents in the same project. An orchestrator agent might need different guidance than a specialized tool-using agent."}]
+30:["$","h2",null,{"id":"connection-to-rewards-and-learnings","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Connection to Rewards and Learnings",["$","$L9",null,{"id":"connection-to-rewards-and-learnings"}]]}]
+31:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Guidelines don’t replace the automated systems—they enhance them:"}]
+32:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Rewards"}]," are still generated automatically for every task. Guidelines influence ",["$","em",null,{"children":"how"}]," they’re generated."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Learnings"}]," are still generated automatically from rewards. Guidelines influence ",["$","em",null,{"children":"what"}]," gets generated and ",["$","em",null,{"children":"how"}]," it’s framed."]}],"\n"]}]
+33:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Think of guidelines as your ongoing conversation with Marlo’s intelligence. Each piece of feedback makes the system a little more aligned with how you think about your agents’ performance and improvement."}]
+36:null

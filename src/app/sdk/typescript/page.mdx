@@ -181,33 +181,49 @@ const learnings = await task.getLearnings();
 // Build system prompt with learnings
 let systemPrompt = 'You are a customer support agent.';
 if (learnings) {
-  const learningsText = learnings.learnings_text as string | undefined;
-  if (learningsText) {
-    systemPrompt += `\n\nLearnings from past interactions:\n${learningsText}`;
+  const active = learnings.active as Array<{ learning?: string }> | undefined;
+  if (active && active.length > 0) {
+    const learningsText = active
+      .filter((obj) => obj.learning)
+      .map((obj) => `- ${obj.learning}`)
+      .join('\n');
+    if (learningsText) {
+      systemPrompt += `\n\nLearnings from past interactions:\n${learningsText}`;
+    }
   }
 }
 
 // Use systemPrompt in your LLM call...
 ```
 
-**Returns:** A `LearningState` object, or `null` if unavailable.
+**Returns:** A `LearningState` object, or `null` if no active learnings exist.
 
 ```typescript
 {
-  learnings_text: "- Always verify order ID format before calling lookup_order\n- Ask for email confirmation when processing refunds",
   active: [
     {
       learning_id: "learning-abc123",
+      learning_key: "support-agent",
       learning: "Always verify order ID format before calling lookup_order",
       expected_outcome: "Reduces tool call failures",
-      confidence: 0.85
+      basis: "Multiple failed tool calls with invalid order IDs",
+      confidence: 0.85,
+      status: "active",
+      agent_id: "support-agent",
+      created_at: "2024-01-15T10:30:00Z",
+      updated_at: "2024-01-15T10:30:00Z"
     }
-  ]
+  ],
+  updated_at: "2024-01-15T10:30:00Z"
 }
 ```
 
-- `learnings_text` (string): Formatted text of all active learnings, ready to inject into prompts.
-- `active` (array): Individual learning objects with details.
+- `active` (array): List of active learning objects. Each object contains:
+  - `learning` (string): The learning text to inject into prompts.
+  - `expected_outcome` (string): What improvement this learning should produce.
+  - `confidence` (number): Confidence score from 0 to 1.
+  - `learning_id`, `learning_key`, `agent_id`, `status`, `basis`, timestamps.
+- `updated_at` (string): When the learnings were last updated.
 
 ## Multi-Agent Systems
 
@@ -374,9 +390,15 @@ async function handleMessage(userInput: string, threadId: string): Promise<strin
   const learnings = await task.getLearnings();
   let systemPrompt = 'You are a helpful customer support agent.';
   if (learnings) {
-    const learningsText = learnings.learnings_text as string | undefined;
-    if (learningsText) {
-      systemPrompt += `\n\nLearnings:\n${learningsText}`;
+    const active = learnings.active as Array<{ learning?: string }> | undefined;
+    if (active && active.length > 0) {
+      const learningsText = active
+        .filter((obj) => obj.learning)
+        .map((obj) => `- ${obj.learning}`)
+        .join('\n');
+      if (learningsText) {
+        systemPrompt += `\n\nLearnings:\n${learningsText}`;
+      }
     }
   }
 

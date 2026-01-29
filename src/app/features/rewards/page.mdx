@@ -55,6 +55,47 @@ You can view rewards for any task in the Marlo dashboard:
 
 Over time, you can track reward trends to see whether your agent is improving or degrading.
 
+## Managing Rewards in the Dashboard
+
+The dashboard provides tools to review and adjust rewards when the automated evaluation needs correction.
+
+### Viewing Reward Details
+
+1. Open a task in the dashboard.
+2. Click on the reward score to expand the full evaluation.
+3. Review the rationale and linked evidence.
+
+### Adjusting a Reward
+
+If the automated evaluation is incorrect, you can provide feedback:
+
+1. Click the **Adjust** button next to the reward score.
+2. Enter a new score between 0.0 and 1.0.
+3. Provide a brief explanation for the adjustment.
+4. Click **Save**.
+
+Adjusted rewards are marked in the dashboard and used to improve future evaluations.
+
+### Bulk Review
+
+For reviewing multiple tasks at once:
+
+1. Navigate to the **Tasks** view in your project.
+2. Filter by date range, agent, or score threshold.
+3. Select multiple tasks to review their rewards in sequence.
+4. Use keyboard shortcuts to quickly approve or flag evaluations.
+
+### Reward Trends
+
+The dashboard displays reward trends over time:
+
+1. Navigate to the **Analytics** section.
+2. View average scores by day, week, or month.
+3. Break down scores by agent to identify which agents need improvement.
+4. Identify patterns in low-scoring tasks to guide agent development.
+
 ## Connection to Learnings
 
 Rewards are the input to Marlo's learning system. When a task receives a reward, Marlo analyzes the rationale and generates learning objects that capture what the agent should do differently. These learnings are then surfaced in future tasks, allowing the agent to avoid repeating the same mistakes.
+
+Low scores with clear rationales produce the most useful learnings. When you adjust a reward, include a specific rationale to help the learning system generate better guidance.

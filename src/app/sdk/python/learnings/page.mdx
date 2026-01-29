@@ -1,0 +1,279 @@
+---
+sidebar_position: 4
+---
+
+# Fetching & Applying Learnings
+
+Learnings are actionable guidance generated from your agent's past successes and failures. By fetching and injecting learnings into your agent's context, you enable it to improve automatically over time.
+
+## The Learning Loop
+
+1. **Your agent runs tasks** → Marlo captures behavior
+2. **Tasks are evaluated** → Rewards score quality and explain issues
+3. **Learnings are generated** → Patterns become actionable guidance
+4. **You fetch learnings** → Inject them into your agent's context
+5. **Agent improves** → Fewer repeated mistakes
+
+## Fetching Learnings
+
+Use `task.get_learnings()` to fetch active learnings for the current agent:
+
+```python
+with marlo.task(thread_id="user-123", agent="support-agent") as task:
+    task.input(user_message)
+
+    # Fetch learnings for this agent
+    learnings = task.get_learnings()
+    
+    if learnings:
+        print(f"Found {len(learnings.get('active', []))} active learnings")
+```
+
+### Response Structure
+
+```python
+{
+    "active": [
+        {
+            "learning_id": "learning-abc123",
+            "learning_key": "support-agent",
+            "learning": "Always verify order ID format before calling lookup_order",
+            "expected_outcome": "Reduces tool call failures",
+            "basis": "Multiple failed tool calls with invalid order IDs",
+            "confidence": 0.85,
+            "status": "active",
+            "agent_id": "support-agent",
+            "created_at": "2024-01-15T10:30:00Z",
+            "updated_at": "2024-01-15T10:30:00Z"
+        }
+    ],
+    "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+**Key fields:**
+- `active` - List of active learning objects
+- `learning` - The guidance text to inject into prompts
+- `expected_outcome` - What improvement this learning should produce
+- `confidence` - Score from 0 to 1 indicating reliability
+- `basis` - Evidence behind the learning
+
+## Injecting into System Prompt
+
+The most common pattern is appending learnings to your system prompt:
+
+```python
+with marlo.task(thread_id="user-123", agent="support-agent") as task:
+    task.input(user_message)
+
+    # Start with base system prompt
+    system_prompt = "You are a helpful customer support agent."
+
+    # Fetch and append learnings
+    learnings = task.get_learnings()
+    if learnings:
+        active = learnings.get("active", [])
+        if active:
+            learnings_text = "\n".join(
+                f"- {obj['learning']}" for obj in active if obj.get("learning")
+            )
+            if learnings_text:
+                system_prompt += f"\n\nLearnings from past interactions:\n{learnings_text}"
+
+    # Use the enhanced system prompt
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message},
+        ],
+    )
+    
+    task.output(response.choices[0].message.content)
+```
+
+## Alternative Injection Patterns
+
+### As a Separate Context Block
+
+```python
+messages = [
+    {"role": "system", "content": base_system_prompt},
+]
+
+learnings = task.get_learnings()
+if learnings and learnings.get("active"):
+    learnings_text = "\n".join(
+        f"- {obj['learning']}" for obj in learnings["active"]
+    )
+    messages.append({
+        "role": "system",
+        "content": f"Important guidance from past interactions:\n{learnings_text}"
+    })
+
+messages.append({"role": "user", "content": user_message})
+```
+
+### Filtered by Confidence
+
+Only apply high-confidence learnings:
+
+```python
+learnings = task.get_learnings()
+if learnings:
+    high_confidence = [
+        obj for obj in learnings.get("active", [])
+        if obj.get("confidence", 0) >= 0.7
+    ]
+    # Use high_confidence list...
+```
+
+### With Context About Why
+
+```python
+learnings = task.get_learnings()
+if learnings:
+    for obj in learnings.get("active", []):
+        learning_with_context = (
+            f"- {obj['learning']} "
+            f"(Expected: {obj.get('expected_outcome', 'improved performance')})"
+        )
+        # Append to prompt...
+```
+
+## Complete Example
+
+```python
+import os
+import marlo
+from openai import OpenAI
+
+marlo.init(api_key=os.getenv("MARLO_API_KEY"))
+marlo.instrument_openai()
+
+marlo.agent(
+    name="support-agent",
+    system_prompt="You are a helpful customer support agent.",
+    tools=[
+        {
+            "name": "lookup_order",
+            "description": "Find order details by order ID",
+            "parameters": {
+                "type": "object",
+                "properties": {"order_id": {"type": "string"}},
+                "required": ["order_id"],
+            },
+        }
+    ],
+    mcp=[],
+    model_config={"model": "gpt-4"},
+)
+
+
+@marlo.track_tool
+def lookup_order(order_id: str) -> dict:
+    """Find order details by order ID."""
+    # Your actual implementation
+    return {"status": "shipped", "eta": "2024-01-15"}
+
+
+def handle_message(user_input: str, thread_id: str) -> str:
+    with marlo.task(
+        thread_id=thread_id,
+        agent="support-agent",
+        thread_name="Support Chat",
+    ) as task:
+        task.input(user_input)
+
+        # Build system prompt with learnings
+        system_prompt = "You are a helpful customer support agent."
+        
+        learnings = task.get_learnings()
+        if learnings:
+            active = learnings.get("active", [])
+            if active:
+                learnings_text = "\n".join(
+                    f"- {obj['learning']}" for obj in active if obj.get("learning")
+                )
+                if learnings_text:
+                    system_prompt += f"\n\nLearnings:\n{learnings_text}"
+
+        # Make LLM call with enhanced prompt
+        client = OpenAI()
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_input},
+            ],
+            tools=[{
+                "type": "function",
+                "function": {
+                    "name": "lookup_order",
+                    "description": "Find order details by order ID",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {"order_id": {"type": "string"}},
+                        "required": ["order_id"],
+                    },
+                },
+            }],
+        )
+
+        # Handle response and tool calls...
+        message = response.choices[0].message
+        
+        if message.tool_calls:
+            import json
+            for tool_call in message.tool_calls:
+                if tool_call.function.name == "lookup_order":
+                    args = json.loads(tool_call.function.arguments)
+                    lookup_order(**args)
+
+        final_response = message.content or "I'll help you with that."
+        task.output(final_response)
+        return final_response
+
+
+# Use the handler
+response = handle_message("Where is my order ORD-123?", "user-456-session-789")
+marlo.shutdown()
+```
+
+## How Learnings Evolve
+
+Learnings aren't static—they improve over time:
+
+- **Confidence increases** when the learning helps tasks succeed
+- **Confidence decreases** when tasks still fail despite the learning
+- **Learnings are refined** when new evidence suggests modifications
+- **Learnings are retired** when confidence drops too low
+
+You can manage learnings manually in the [Marlo dashboard](/features/learning).
+
+## Caching Learnings
+
+For high-traffic applications, consider caching learnings to reduce API calls:
+
+```python
+import time
+
+_learnings_cache = {}
+_cache_ttl = 300  # 5 minutes
+
+def get_cached_learnings(task, agent_name: str):
+    now = time.time()
+    cached = _learnings_cache.get(agent_name)
+    
+    if cached and (now - cached["timestamp"]) < _cache_ttl:
+        return cached["learnings"]
+    
+    learnings = task.get_learnings()
+    _learnings_cache[agent_name] = {
+        "learnings": learnings,
+        "timestamp": now,
+    }
+    return learnings
+```
+
+Learnings typically don't change rapidly, so a 5-minute cache is usually appropriate.

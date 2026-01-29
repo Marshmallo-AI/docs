@@ -1,0 +1,331 @@
+---
+sidebar_position: 6
+---
+
+# API Reference
+
+Complete reference for all Marlo Python SDK functions and methods.
+
+## Initialization
+
+### marlo.init(api_key, endpoint?)
+
+Initialize the SDK synchronously. Call once at application startup.
+
+```python
+marlo.init(api_key=os.getenv("MARLO_API_KEY"))
+```
+
+**Parameters:**
+- `api_key` (str): Your Marlo API key from Settings → Project
+- `endpoint` (str, optional): API endpoint. Defaults to `"https://marlo.marshmallo.ai"`
+
+> **Note:** If called from an async context, use `init_async()` instead to avoid blocking the event loop.
+
+---
+
+### marlo.init_async(api_key, endpoint?)
+
+Initialize the SDK asynchronously. Use in async applications (FastAPI, LangGraph).
+
+```python
+await marlo.init_async(api_key=os.getenv("MARLO_API_KEY"))
+```
+
+**Parameters:** Same as `marlo.init()`
+
+---
+
+### marlo.init_in_thread(api_key, endpoint?)
+
+Initialize the SDK in a background thread. Safe to call from async context without blocking.
+
+```python
+marlo.init_in_thread(api_key=os.getenv("MARLO_API_KEY"))
+```
+
+**Parameters:** Same as `marlo.init()`
+
+---
+
+### marlo.shutdown()
+
+Flush pending events and shut down the SDK. Call before application exit.
+
+```python
+marlo.shutdown()
+```
+
+## Instrumentation
+
+### marlo.instrument_openai()
+
+Instrument the OpenAI client to automatically capture all chat completion calls. Call once after `marlo.init()`.
+
+```python
+marlo.instrument_openai()
+```
+
+---
+
+### marlo.instrument_anthropic()
+
+Instrument the Anthropic client to automatically capture all message creation calls. Supports extended thinking token capture.
+
+```python
+marlo.instrument_anthropic()
+```
+
+---
+
+### marlo.instrument_litellm()
+
+Instrument LiteLLM to automatically capture all completion calls across any provider.
+
+```python
+marlo.instrument_litellm()
+```
+
+## Agent Registration
+
+### marlo.agent(...)
+
+Register an agent definition with Marlo. Call once per agent, typically at application startup.
+
+```python
+marlo.agent(
+    name="support-agent",
+    system_prompt="You are a helpful customer support agent.",
+    tools=[
+        {
+            "name": "lookup_order",
+            "description": "Find order details by order ID",
+            "parameters": {
+                "type": "object",
+                "properties": {"order_id": {"type": "string"}},
+                "required": ["order_id"],
+            },
+        }
+    ],
+    mcp=[],
+    model_config={"model": "gpt-4"},
+)
+```
+
+**Parameters:**
+- `name` (str): Unique identifier for this agent
+- `system_prompt` (str): The system prompt your agent uses
+- `tools` (list[dict]): List of tools available to the agent. Each tool should have:
+  - `name` (str): Tool name
+  - `description` (str): What the tool does
+  - `parameters` (dict): JSON Schema defining the tool's parameters
+- `mcp` (list[dict], optional): MCP server definitions. Pass `[]` if not using MCP
+- `model_config` (dict, optional): Model settings such as model name and temperature
+
+## Task Context
+
+### marlo.task(thread_id, agent, thread_name?)
+
+Create a task context for tracking agent execution. Use as a context manager.
+
+```python
+with marlo.task(
+    thread_id="user-123-session-456",
+    agent="support-agent",
+    thread_name="Support Chat",
+) as task:
+    # Task methods available here
+    ...
+```
+
+**Parameters:**
+- `thread_id` (str): Stable identifier for the conversation. Tasks with the same `thread_id` are grouped together
+- `agent` (str): Name of the registered agent handling this task
+- `thread_name` (str, optional): Human-readable label shown in the dashboard. Once set for a thread, it stays fixed
+
+**Returns:** `TaskContext` object
+
+## TaskContext Methods
+
+### task.input(text)
+
+Records the user input that started the task. Call first inside the task context.
+
+```python
+task.input("What is the weather in Tokyo?")
+```
+
+**Parameters:**
+- `text` (str): The user's input message
+
+---
+
+### task.output(text)
+
+Records the final response returned to the user. Call before exiting the task context.
+
+```python
+task.output("Tokyo is 25°C and sunny.")
+```
+
+**Parameters:**
+- `text` (str): The agent's final response
+
+---
+
+### task.llm(model, usage, messages?, response?)
+
+Records an LLM call manually. Use when automatic instrumentation isn't available.
+
+```python
+task.llm(
+    model="gpt-4",
+    usage={"input_tokens": 150, "output_tokens": 50},
+    messages=[{"role": "user", "content": "What is the weather?"}],
+    response="It is sunny.",
+)
+```
+
+**Parameters:**
+- `model` (str): The model name
+- `usage` (dict): Token usage with keys:
+  - `input_tokens` or `prompt_tokens` (int)
+  - `output_tokens` or `completion_tokens` (int)
+  - `reasoning_tokens` or `thinking_tokens` (int, optional)
+- `messages` (list, optional): The messages sent to the model
+- `response` (str, optional): The model's response text
+
+---
+
+### task.tool(name, input, output, error?)
+
+Records a tool call manually. Use when the `@marlo.track_tool` decorator isn't practical.
+
+```python
+task.tool(
+    name="lookup_order",
+    input={"order_id": "12345"},
+    output={"status": "shipped", "eta": "2024-01-15"},
+)
+```
+
+**Parameters:**
+- `name` (str): The tool name. Should match a tool in your agent definition
+- `input` (dict): The input passed to the tool
+- `output` (Any): The output returned by the tool
+- `error` (str, optional): Error message if the tool call failed
+
+---
+
+### task.reasoning(text)
+
+Records internal reasoning or chain-of-thought.
+
+```python
+task.reasoning("User is asking about order status. I should call lookup_order.")
+```
+
+**Parameters:**
+- `text` (str): The reasoning or thought process
+
+---
+
+### task.error(message)
+
+Marks the task as failed. If an exception is raised inside the task context, the task is marked as error automatically.
+
+```python
+task.error("Tool returned invalid response")
+```
+
+**Parameters:**
+- `message` (str): Description of the error
+
+---
+
+### task.child(agent)
+
+Creates a child task for multi-agent workflows. Returns a new `TaskContext`.
+
+```python
+with parent.child(agent="researcher") as child:
+    child.input("Research this topic")
+    # ...
+    child.output("Findings...")
+```
+
+**Parameters:**
+- `agent` (str): Name of the registered agent for the child task
+
+**Returns:** `TaskContext` object
+
+---
+
+### task.get_learnings()
+
+Fetches active learnings for the current agent.
+
+```python
+learnings = task.get_learnings()
+```
+
+**Returns:** A dict with the learning state, or `None` if no active learnings exist.
+
+```python
+{
+    "active": [
+        {
+            "learning_id": "learning-abc123",
+            "learning_key": "support-agent",
+            "learning": "Always verify order ID format before calling lookup_order",
+            "expected_outcome": "Reduces tool call failures",
+            "basis": "Multiple failed tool calls with invalid order IDs",
+            "confidence": 0.85,
+            "status": "active",
+            "agent_id": "support-agent",
+            "created_at": "2024-01-15T10:30:00Z",
+            "updated_at": "2024-01-15T10:30:00Z"
+        }
+    ],
+    "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+## Decorators
+
+### @marlo.track_tool
+
+Decorator that automatically tracks tool invocations. Works with sync and async functions.
+
+```python
+@marlo.track_tool
+def lookup_order(order_id: str) -> dict:
+    """Find order details by order ID."""
+    return {"status": "shipped"}
+
+@marlo.track_tool
+async def async_lookup(order_id: str) -> dict:
+    """Async version."""
+    return {"status": "shipped"}
+```
+
+When a decorated tool is called inside a `marlo.task()` context, Marlo automatically records:
+- Tool name (from function name)
+- Input arguments
+- Output value
+- Any exceptions (as errors)
+
+## Utility Functions
+
+### marlo.get_current_task()
+
+Returns the currently active TaskContext, or `None` if not inside a task. Useful for recording events from nested functions.
+
+```python
+def helper_function():
+    task = marlo.get_current_task()
+    if task:
+        task.reasoning("Custom reasoning from helper function")
+```
+
+**Returns:** `TaskContext | None`

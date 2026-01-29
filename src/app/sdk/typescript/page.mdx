@@ -2,9 +2,9 @@
 sidebar_position: 2
 ---
 
-# TypeScript
+# TypeScript SDK
 
-The Marlo SDK captures your agent's behavior and sends it to Marlo for evaluation and learning. This page covers how to install, configure, and use the SDK to track tasks, record interactions, and apply learnings.
+The Marlo TypeScript SDK captures your agent's behavior and sends it to Marlo for evaluation and learning. With just a few lines of code, you can start tracking tasks, recording interactions, and applying learnings.
 
 ## Installation
 
@@ -12,9 +12,57 @@ The Marlo SDK captures your agent's behavior and sends it to Marlo for evaluatio
 npm install @marshmallo/marlo
 ```
 
+## Quick Start
+
+Here's the fastest way to get Marlo working with your agent:
+
+```typescript
+import * as marlo from '@marshmallo/marlo';
+import OpenAI from 'openai';
+
+// 1. Initialize Marlo (once at startup)
+await marlo.init(process.env.MARLO_API_KEY!);
+
+// 2. Register your agent
+marlo.registerAgent(
+  'my-agent',
+  'You are a helpful assistant.',
+  [],  // tools
+  [],  // mcp
+  { model: 'gpt-4' }
+);
+
+// 3. Wrap your agent logic in a task
+const client = new OpenAI();
+
+const task = marlo.task('user-123', 'my-agent').start();
+task.input('What is 2 + 2?');
+
+const response = await client.chat.completions.create({
+  model: 'gpt-4',
+  messages: [{ role: 'user', content: 'What is 2 + 2?' }],
+});
+
+// Record the LLM call
+task.llm({
+  model: 'gpt-4',
+  usage: {
+    input_tokens: response.usage?.prompt_tokens || 0,
+    output_tokens: response.usage?.completion_tokens || 0,
+  },
+});
+
+const answer = response.choices[0].message.content || '';
+task.output(answer);
+task.end();
+
+// 4. Shutdown before exit
+await marlo.shutdown();
+```
+
 ## Configuration
 
-Initialize the SDK once when your application starts. You'll find your API key in Settings → Project at marshmallo.ai.
+Initialize the SDK once when your application starts. You'll find your API key in **Settings → Project** at [marshmallo.ai](https://marshmallo.ai).
 
 ```typescript
 import * as marlo from '@marshmallo/marlo';
@@ -22,12 +70,35 @@ import * as marlo from '@marshmallo/marlo';
 await marlo.init(process.env.MARLO_API_KEY!);
 ```
 
+## Core Concepts
+
+### Tasks
+
+A **task** represents a single agent execution. Unlike Python's context manager, TypeScript uses explicit `start()` and `end()` calls:
+
+```typescript
+const task = marlo.task(
+  'user-123-session-456',
+  'my-agent',
+  'Support Chat'  // optional thread name
+).start();
+
+task.input("User's question here");
+
+// Your agent logic...
+
+task.output("Agent's response here");
+task.end();
+```
+
 **Parameters:**
-- `apiKey` (string): Your Marlo API key from Settings → Project.
+- `threadId` (string): Stable identifier for the conversation. Tasks with the same `threadId` are grouped together
+- `agent` (string): Name of the registered agent handling this task
+- `threadName` (string, optional): Human-readable label shown in the dashboard
 
-## Register an Agent
+### Agents
 
-Before tracking tasks, register your agent. This tells Marlo what your agent is capable of, which is used during evaluation.
+Register your agent's configuration so Marlo knows what it's capable of:
 
 ```typescript
 marlo.registerAgent(
@@ -44,305 +115,20 @@ marlo.registerAgent(
       },
     },
   ],
-  [],
+  [],  // mcp
   { model: 'gpt-4' }
 );
 ```
 
-**Parameters:**
-- `name` (string): Unique identifier for this agent.
-- `systemPrompt` (string): The system prompt your agent uses.
-- `tools` (ToolDefinition[]): List of tools available to the agent. Each tool should have `name`, `description`, and `parameters`.
-- `mcp` (McpDefinition[] | null, optional): MCP server definitions. Pass `[]` if not using MCP.
-- `modelConfig` (ModelConfig | null, optional): Model settings such as model name and temperature.
+### Shutdown
 
-## Track a Task
-
-Create a task context to capture all events for an agent execution.
-
-```typescript
-const task = marlo.task(
-  'user-123-session-456',
-  'support-agent',
-  'Order Inquiry'
-).start();
-
-task.input('Where is my order #12345?');
-
-// Your agent logic here...
-
-task.output('Your order is shipped and arrives tomorrow.');
-task.end();
-```
-
-**Parameters:**
-- `threadId` (string): Stable identifier for the conversation. Tasks with the same `threadId` are grouped together.
-- `agent` (string): Name of the registered agent handling this task.
-- `threadName` (string, optional): Human-readable label shown in the dashboard. Once set for a thread, it stays fixed.
-
-## Task Methods
-
-### task.input(text)
-
-Records the user input that started the task. Call this first after starting the task.
-
-```typescript
-task.input('What is the weather in Tokyo?');
-```
-
-- `text` (string): The user's input message.
-
-### task.output(text)
-
-Records the final response returned to the user. Call this before ending the task.
-
-```typescript
-task.output('Tokyo is 25C and sunny.');
-```
-
-- `text` (string): The agent's final response.
-
-### task.llm(params)
-
-Records an LLM call. Call this for each model invocation.
-
-```typescript
-task.llm({
-  model: 'gpt-4',
-  usage: { input_tokens: 150, output_tokens: 50 },
-  messages: [{ role: 'user', content: 'What is the weather?' }],
-  response: 'It is sunny.',
-});
-```
-
-- `model` (string): The model name.
-- `usage` (TokenUsage): Token usage with `input_tokens`, `output_tokens`, and optionally `total_tokens`.
-- `messages` (unknown[], optional): The messages sent to the model.
-- `response` (string, optional): The model's response text.
-
-### task.tool(name, input, output, error?)
-
-Records a tool call. Call this for each tool execution.
-
-```typescript
-task.tool(
-  'lookup_order',
-  { order_id: '12345' },
-  { status: 'shipped', eta: '2024-01-15' }
-);
-```
-
-- `name` (string): The tool name. Should match a tool in your agent definition.
-- `input` (`Record<string, unknown>`): The input passed to the tool.
-- `output` (`unknown`): The output returned by the tool.
-- `error` (string, optional): Error message if the tool call failed.
-
-### task.reasoning(text)
-
-Records internal reasoning or chain-of-thought.
-
-```typescript
-task.reasoning('User is asking about order status. I should call lookup_order.');
-```
-
-- `text` (string): The reasoning or thought process.
-
-### task.error(message)
-
-Marks the task as failed. Call this before `task.end()` if an error occurred.
-
-```typescript
-task.error('Tool returned invalid response');
-```
-
-- `message` (string): Description of the error.
-
-### task.end(hasError?)
-
-Finalizes the task and sends all events.
-
-```typescript
-task.end();
-```
-
-- `hasError` (boolean, optional): Pass `true` to mark the task as failed.
-
-## Fetch Learnings
-
-Learnings are guidance generated from past task outcomes. Use `task.getLearnings()` to fetch them and inject into your agent's context.
-
-```typescript
-const task = marlo.task('user-123', 'support-agent').start();
-task.input(userMessage);
-
-// Fetch learnings
-const learnings = await task.getLearnings();
-
-// Build system prompt with learnings
-let systemPrompt = 'You are a customer support agent.';
-if (learnings) {
-  const active = learnings.active as Array<{ learning?: string }> | undefined;
-  if (active && active.length > 0) {
-    const learningsText = active
-      .filter((obj) => obj.learning)
-      .map((obj) => `- ${obj.learning}`)
-      .join('\n');
-    if (learningsText) {
-      systemPrompt += `\n\nLearnings from past interactions:\n${learningsText}`;
-    }
-  }
-}
-
-// Use systemPrompt in your LLM call...
-```
-
-**Returns:** A `LearningState` object, or `null` if no active learnings exist.
-
-```typescript
-{
-  active: [
-    {
-      learning_id: "learning-abc123",
-      learning_key: "support-agent",
-      learning: "Always verify order ID format before calling lookup_order",
-      expected_outcome: "Reduces tool call failures",
-      basis: "Multiple failed tool calls with invalid order IDs",
-      confidence: 0.85,
-      status: "active",
-      agent_id: "support-agent",
-      created_at: "2024-01-15T10:30:00Z",
-      updated_at: "2024-01-15T10:30:00Z"
-    }
-  ],
-  updated_at: "2024-01-15T10:30:00Z"
-}
-```
-
-- `active` (array): List of active learning objects. Each object contains:
-  - `learning` (string): The learning text to inject into prompts.
-  - `expected_outcome` (string): What improvement this learning should produce.
-  - `confidence` (number): Confidence score from 0 to 1.
-  - `learning_id`, `learning_key`, `agent_id`, `status`, `basis`, timestamps.
-- `updated_at` (string): When the learnings were last updated.
-
-## Multi-Agent Systems
-
-For workflows with multiple agents, use `task.child()` to create child tasks. Child tasks are linked to the parent in the dashboard, showing the full execution hierarchy.
-
-### How It Works
-
-1. The parent agent receives the user request
-2. The parent creates child tasks for specialized agents
-3. Each child completes its work and returns results
-4. The parent combines results and responds to the user
-
-### Example: Research Assistant
-
-```typescript
-import * as marlo from '@marshmallo/marlo';
-
-await marlo.init('your-api-key');
-
-// Register all agents
-marlo.registerAgent(
-  'orchestrator',
-  'You coordinate research tasks by delegating to specialized agents.',
-  [],
-  [],
-  { model: 'gpt-4' }
-);
-
-marlo.registerAgent(
-  'researcher',
-  'You search for and gather information on topics.',
-  [
-    {
-      name: 'web_search',
-      description: 'Search the web for information',
-      parameters: { type: 'object', properties: { query: { type: 'string' } } },
-    },
-  ],
-  [],
-  { model: 'gpt-4' }
-);
-
-marlo.registerAgent(
-  'writer',
-  'You write clear summaries based on research findings.',
-  [],
-  [],
-  { model: 'gpt-4' }
-);
-
-function researchTopic(userRequest: string, threadId: string): string {
-  const parent = marlo.task(threadId, 'orchestrator').start();
-  parent.input(userRequest);
-  parent.reasoning("User wants research. I'll delegate to researcher, then writer.");
-
-  // Step 1: Research agent gathers information
-  const researcher = parent.child('researcher').start();
-  researcher.input('Find information about: ' + userRequest);
-
-  researcher.tool(
-    'web_search',
-    { query: userRequest },
-    { results: ['Source 1: ...', 'Source 2: ...'] }
-  );
-
-  researcher.llm({
-    model: 'gpt-4',
-    usage: { input_tokens: 200, output_tokens: 150 },
-  });
-
-  const researchFindings = 'Found 3 relevant sources about the topic...';
-  researcher.output(researchFindings);
-  researcher.end();
-
-  // Step 2: Writer agent creates summary
-  const writer = parent.child('writer').start();
-  writer.input('Summarize these findings: ' + researchFindings);
-
-  writer.llm({
-    model: 'gpt-4',
-    usage: { input_tokens: 300, output_tokens: 200 },
-  });
-
-  const summary = 'Here is a summary of the research...';
-  writer.output(summary);
-  writer.end();
-
-  // Parent combines and responds
-  parent.llm({
-    model: 'gpt-4',
-    usage: { input_tokens: 100, output_tokens: 50 },
-  });
-
-  const finalResponse = 'Based on my research: ' + summary;
-  parent.output(finalResponse);
-  parent.end();
-
-  return finalResponse;
-}
-```
-
-### Key Points
-
-- Register all agents before using them in tasks
-- Call `.start()` on each task after creating it
-- Call `.end()` on each task when complete
-- Each child task has its own `input()` and `output()`
-- Child tasks appear nested under the parent in the dashboard
-- Learnings are generated per-agent, so each agent improves independently
-
-## Shutdown
-
-Call `marlo.shutdown()` before your application exits to ensure all pending events are sent.
+Always call `marlo.shutdown()` before your application exits:
 
 ```typescript
 await marlo.shutdown();
 ```
 
-For web applications, call this in your shutdown handler:
+For web servers:
 
 ```typescript
 // Express
@@ -351,88 +137,13 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-// Next.js API routes - use middleware or cleanup in serverless function
+// Next.js API routes - use cleanup in serverless function
 ```
 
-## Full Example
+## What's Next?
 
-```typescript
-import * as marlo from '@marshmallo/marlo';
-
-// 1. Initialize
-await marlo.init(process.env.MARLO_API_KEY!);
-
-// 2. Register agent
-marlo.registerAgent(
-  'support-agent',
-  'You are a helpful customer support agent.',
-  [
-    {
-      name: 'lookup_order',
-      description: 'Find order details by order ID',
-      parameters: {
-        type: 'object',
-        properties: { order_id: { type: 'string' } },
-        required: ['order_id'],
-      },
-    },
-  ],
-  [],
-  { model: 'gpt-4' }
-);
-
-// 3. Handle requests
-async function handleMessage(userInput: string, threadId: string): Promise<string> {
-  const task = marlo.task(threadId, 'support-agent', 'Support Chat').start();
-  task.input(userInput);
-
-  // Fetch and apply learnings
-  const learnings = await task.getLearnings();
-  let systemPrompt = 'You are a helpful customer support agent.';
-  if (learnings) {
-    const active = learnings.active as Array<{ learning?: string }> | undefined;
-    if (active && active.length > 0) {
-      const learningsText = active
-        .filter((obj) => obj.learning)
-        .map((obj) => `- ${obj.learning}`)
-        .join('\n');
-      if (learningsText) {
-        systemPrompt += `\n\nLearnings:\n${learningsText}`;
-      }
-    }
-  }
-
-  // Record reasoning
-  task.reasoning('User is asking about an order. I should look it up.');
-
-  // Record tool call
-  task.tool(
-    'lookup_order',
-    { order_id: 'ORD-123' },
-    { status: 'shipped', eta: '2024-01-15' }
-  );
-
-  // Record LLM call
-  const responseText = 'Your order ORD-123 has shipped and will arrive by January 15th.';
-  task.llm({
-    model: 'gpt-4',
-    usage: { input_tokens: 200, output_tokens: 75 },
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userInput },
-    ],
-    response: responseText,
-  });
-
-  task.output(responseText);
-  task.end();
-
-  return responseText;
-}
-
-// 4. Use the handler
-const response = await handleMessage('Where is my order ORD-123?', 'user-456-session-789');
-
-// 5. Shutdown before exit
-await marlo.shutdown();
-```
+- [**Auto Instrumentation**](/sdk/typescript/instrumentation) - Automatically capture LLM calls
+- [**Tool Tracking**](/sdk/typescript/tools) - Record tool calls
+- [**Learnings**](/sdk/typescript/learnings) - Fetch and apply learnings to improve your agent
+- [**Multi-Agent**](/sdk/typescript/multi-agent) - Track complex multi-agent workflows
+- [**API Reference**](/sdk/typescript/reference) - Complete method documentation

@@ -1,0 +1,242 @@
+---
+sidebar_position: 2
+---
+
+# Auto Instrumentation
+
+Marlo can automatically capture LLM calls, eliminating the need for manual tracking code. Just call the instrumentation function once after `marlo.init()`, and all subsequent API calls are tracked automatically.
+
+## Supported Providers
+
+- **OpenAI** - GPT-4, GPT-4o, GPT-5, o1, o3, and all chat completion models
+- **Anthropic** - Claude 3, Claude 3.5, Claude 4, including extended thinking
+- **LiteLLM** - Any model through LiteLLM's unified interface
+
+## OpenAI
+
+```python
+import os
+import marlo
+from openai import OpenAI
+
+marlo.init(api_key=os.getenv("MARLO_API_KEY"))
+marlo.instrument_openai()  # Call once after init
+
+client = OpenAI()
+
+with marlo.task(thread_id="user-123", agent="my-agent") as task:
+    task.input("What is the capital of France?")
+    
+    # This call is automatically tracked
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": "What is the capital of France?"}]
+    )
+    
+    task.output(response.choices[0].message.content)
+```
+
+### What Gets Captured
+
+- Model name
+- Messages sent
+- Response content
+- Token usage (prompt, completion, reasoning)
+
+### Reasoning Models (o1, o3, GPT-5)
+
+For models with reasoning capabilities, Marlo automatically captures reasoning tokens:
+
+```python
+response = client.chat.completions.create(
+    model="gpt-5",
+    messages=[{"role": "user", "content": "Solve this step by step..."}],
+    reasoning_effort="medium",
+    max_completion_tokens=2000,
+)
+```
+
+The captured usage includes:
+```python
+{
+    "prompt_tokens": 150,
+    "completion_tokens": 200,
+    "reasoning_tokens": 5000,  # Automatically captured
+    "total_tokens": 5350
+}
+```
+
+## Anthropic
+
+```python
+import os
+import marlo
+from anthropic import Anthropic
+
+marlo.init(api_key=os.getenv("MARLO_API_KEY"))
+marlo.instrument_anthropic()
+
+client = Anthropic()
+
+with marlo.task(thread_id="user-123", agent="my-agent") as task:
+    task.input("Explain quantum computing")
+    
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": "Explain quantum computing"}]
+    )
+    
+    task.output(response.content[0].text)
+```
+
+### Extended Thinking
+
+When using Claude with extended thinking, reasoning tokens are captured automatically:
+
+```python
+response = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=16000,
+    thinking={
+        "type": "enabled",
+        "budget_tokens": 10000
+    },
+    messages=[{"role": "user", "content": "Solve this logic puzzle..."}]
+)
+
+# Extract the text response
+output_text = ""
+for block in response.content:
+    if block.type == "text":
+        output_text = block.text
+
+task.output(output_text)
+```
+
+## LiteLLM
+
+[LiteLLM](https://docs.litellm.ai/) provides a unified interface for 100+ LLM providers. Marlo's LiteLLM instrumentation captures calls to any model:
+
+```python
+import os
+import marlo
+import litellm
+
+marlo.init(api_key=os.getenv("MARLO_API_KEY"))
+marlo.instrument_litellm()
+
+with marlo.task(thread_id="user-123", agent="my-agent") as task:
+    task.input("What is 2+2?")
+    
+    # Works with any LiteLLM-supported model
+    response = litellm.completion(
+        model="openai/gpt-4o-mini",
+        messages=[{"role": "user", "content": "What is 2+2?"}]
+    )
+    
+    task.output(response.choices[0].message.content)
+```
+
+### Why LiteLLM?
+
+- **Provider flexibility** - Switch between OpenAI, Anthropic, Azure, Bedrock, Vertex AI, and more
+- **Single instrumentation** - One `instrument_litellm()` call captures all providers
+- **Consistent tracking** - Same event format regardless of underlying provider
+
+### Examples with Different Providers
+
+```python
+# OpenAI via LiteLLM
+response = litellm.completion(
+    model="openai/gpt-4",
+    messages=[{"role": "user", "content": "Hello"}]
+)
+
+# Anthropic via LiteLLM
+response = litellm.completion(
+    model="anthropic/claude-3-haiku-20240307",
+    messages=[{"role": "user", "content": "Hello"}]
+)
+
+# Azure OpenAI via LiteLLM
+response = litellm.completion(
+    model="azure/gpt-4-deployment",
+    messages=[{"role": "user", "content": "Hello"}]
+)
+```
+
+### Reasoning Tokens with LiteLLM
+
+LiteLLM passes through reasoning parameters and token counts:
+
+```python
+response = litellm.completion(
+    model="openai/gpt-5",
+    messages=[{"role": "user", "content": "Calculate 15% of 80. Think step by step."}],
+    reasoning_effort="medium",
+    max_completion_tokens=2000,
+)
+```
+
+## Multiple Providers
+
+You can instrument multiple providers in the same application:
+
+```python
+marlo.init(api_key=os.getenv("MARLO_API_KEY"))
+marlo.instrument_openai()
+marlo.instrument_anthropic()
+marlo.instrument_litellm()
+```
+
+Each instrumentation is independent—use whichever providers your agent needs.
+
+## Token Usage Aggregation
+
+Within a task, Marlo aggregates token usage across all LLM calls:
+
+```python
+with marlo.task(thread_id="user-123", agent="my-agent") as task:
+    task.input("Complex multi-step question")
+    
+    # First LLM call
+    response1 = client.chat.completions.create(...)
+    
+    # Second LLM call
+    response2 = client.chat.completions.create(...)
+    
+    task.output(final_answer)
+    
+# Task context automatically tracks:
+# - Total prompt tokens across all calls
+# - Total completion tokens
+# - Total reasoning tokens (if applicable)
+# - Number of LLM calls
+```
+
+This aggregated usage appears in the dashboard for cost tracking and analysis.
+
+## Manual LLM Tracking
+
+If you're using an unsupported provider or need explicit control, you can track LLM calls manually:
+
+```python
+with marlo.task(thread_id="user-123", agent="my-agent") as task:
+    task.input("Hello")
+    
+    # Your custom LLM call
+    response = my_custom_llm(prompt="Hello")
+    
+    # Manual tracking
+    task.llm(
+        model="custom-model",
+        usage={"input_tokens": 50, "output_tokens": 25},
+        messages=[{"role": "user", "content": "Hello"}],
+        response=response.text,
+    )
+    
+    task.output(response.text)
+```
+
+Both automatic and manual tracking can be used in the same application.

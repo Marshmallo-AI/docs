@@ -1,0 +1,282 @@
+---
+sidebar_position: 2
+---
+
+# LLM Tracking
+
+The TypeScript SDK provides manual LLM tracking through the `task.llm()` method. This gives you full control over what data is captured from your LLM calls.
+
+## Recording LLM Calls
+
+Use `task.llm()` after each LLM call to record the interaction:
+
+```typescript
+import * as marlo from '@marshmallo/marlo';
+import OpenAI from 'openai';
+
+await marlo.init(process.env.MARLO_API_KEY!);
+
+const client = new OpenAI();
+
+const task = marlo.task('user-123', 'my-agent').start();
+task.input('What is the capital of France?');
+
+const response = await client.chat.completions.create({
+  model: 'gpt-4',
+  messages: [{ role: 'user', content: 'What is the capital of France?' }],
+});
+
+// Record the LLM call
+task.llm({
+  model: 'gpt-4',
+  usage: {
+    input_tokens: response.usage?.prompt_tokens || 0,
+    output_tokens: response.usage?.completion_tokens || 0,
+  },
+  messages: [{ role: 'user', content: 'What is the capital of France?' }],
+  response: response.choices[0].message.content || '',
+});
+
+task.output(response.choices[0].message.content || '');
+task.end();
+```
+
+## What Gets Captured
+
+Each `task.llm()` call records:
+
+- **Model name** - Which model was used
+- **Token usage** - Input, output, and reasoning tokens
+- **Messages** - The conversation sent to the model (optional)
+- **Response** - The model's response text (optional)
+
+## OpenAI Example
+
+```typescript
+import OpenAI from 'openai';
+
+const client = new OpenAI();
+
+const task = marlo.task('user-123', 'my-agent').start();
+task.input(userMessage);
+
+const messages = [
+  { role: 'system' as const, content: 'You are a helpful assistant.' },
+  { role: 'user' as const, content: userMessage },
+];
+
+const response = await client.chat.completions.create({
+  model: 'gpt-4',
+  messages,
+});
+
+task.llm({
+  model: 'gpt-4',
+  usage: {
+    input_tokens: response.usage?.prompt_tokens || 0,
+    output_tokens: response.usage?.completion_tokens || 0,
+  },
+  messages,
+  response: response.choices[0].message.content || '',
+});
+
+task.output(response.choices[0].message.content || '');
+task.end();
+```
+
+## Anthropic Example
+
+```typescript
+import Anthropic from '@anthropic-ai/sdk';
+
+const client = new Anthropic();
+
+const task = marlo.task('user-123', 'my-agent').start();
+task.input(userMessage);
+
+const response = await client.messages.create({
+  model: 'claude-sonnet-4-20250514',
+  max_tokens: 1024,
+  messages: [{ role: 'user', content: userMessage }],
+});
+
+const responseText = response.content[0].type === 'text' 
+  ? response.content[0].text 
+  : '';
+
+task.llm({
+  model: 'claude-sonnet-4-20250514',
+  usage: {
+    input_tokens: response.usage.input_tokens,
+    output_tokens: response.usage.output_tokens,
+  },
+  messages: [{ role: 'user', content: userMessage }],
+  response: responseText,
+});
+
+task.output(responseText);
+task.end();
+```
+
+## Reasoning Tokens
+
+For models with reasoning capabilities (o1, o3, GPT-5, Claude with extended thinking), include reasoning tokens in the usage:
+
+```typescript
+// OpenAI reasoning models
+const response = await client.chat.completions.create({
+  model: 'gpt-5',
+  messages: [{ role: 'user', content: 'Solve this step by step...' }],
+  reasoning_effort: 'medium',
+});
+
+task.llm({
+  model: 'gpt-5',
+  usage: {
+    input_tokens: response.usage?.prompt_tokens || 0,
+    output_tokens: response.usage?.completion_tokens || 0,
+    reasoning_tokens: response.usage?.completion_tokens_details?.reasoning_tokens || 0,
+  },
+});
+```
+
+```typescript
+// Claude with extended thinking
+const response = await client.messages.create({
+  model: 'claude-sonnet-4-20250514',
+  max_tokens: 16000,
+  thinking: {
+    type: 'enabled',
+    budget_tokens: 10000,
+  },
+  messages: [{ role: 'user', content: 'Solve this logic puzzle...' }],
+});
+
+task.llm({
+  model: 'claude-sonnet-4-20250514',
+  usage: {
+    input_tokens: response.usage.input_tokens,
+    output_tokens: response.usage.output_tokens,
+    // Include thinking tokens if available
+  },
+});
+```
+
+## Multiple LLM Calls
+
+Record each LLM call separately within a task:
+
+```typescript
+const task = marlo.task('user-123', 'my-agent').start();
+task.input('Complex multi-step question');
+
+// First LLM call - planning
+const planResponse = await client.chat.completions.create({
+  model: 'gpt-4',
+  messages: [{ role: 'user', content: 'Create a plan for...' }],
+});
+
+task.llm({
+  model: 'gpt-4',
+  usage: {
+    input_tokens: planResponse.usage?.prompt_tokens || 0,
+    output_tokens: planResponse.usage?.completion_tokens || 0,
+  },
+});
+
+// Second LLM call - execution
+const executeResponse = await client.chat.completions.create({
+  model: 'gpt-4',
+  messages: [{ role: 'user', content: 'Execute the plan...' }],
+});
+
+task.llm({
+  model: 'gpt-4',
+  usage: {
+    input_tokens: executeResponse.usage?.prompt_tokens || 0,
+    output_tokens: executeResponse.usage?.completion_tokens || 0,
+  },
+});
+
+task.output(executeResponse.choices[0].message.content || '');
+task.end();
+```
+
+Marlo automatically aggregates token usage across all LLM calls in a task.
+
+## Helper Function Pattern
+
+Create a helper function to simplify tracking:
+
+```typescript
+async function trackedCompletion(
+  task: marlo.TaskContext,
+  params: OpenAI.ChatCompletionCreateParams
+) {
+  const response = await client.chat.completions.create(params);
+  
+  task.llm({
+    model: params.model,
+    usage: {
+      input_tokens: response.usage?.prompt_tokens || 0,
+      output_tokens: response.usage?.completion_tokens || 0,
+    },
+    messages: params.messages,
+    response: response.choices[0].message.content || '',
+  });
+  
+  return response;
+}
+
+// Usage
+const task = marlo.task('user-123', 'my-agent').start();
+task.input(userMessage);
+
+const response = await trackedCompletion(task, {
+  model: 'gpt-4',
+  messages: [{ role: 'user', content: userMessage }],
+});
+
+task.output(response.choices[0].message.content || '');
+task.end();
+```
+
+## Streaming Responses
+
+For streaming responses, accumulate the content and record after completion:
+
+```typescript
+const task = marlo.task('user-123', 'my-agent').start();
+task.input(userMessage);
+
+const stream = await client.chat.completions.create({
+  model: 'gpt-4',
+  messages: [{ role: 'user', content: userMessage }],
+  stream: true,
+});
+
+let fullContent = '';
+let usage = { input_tokens: 0, output_tokens: 0 };
+
+for await (const chunk of stream) {
+  const content = chunk.choices[0]?.delta?.content || '';
+  fullContent += content;
+  
+  // Some providers include usage in the final chunk
+  if (chunk.usage) {
+    usage = {
+      input_tokens: chunk.usage.prompt_tokens || 0,
+      output_tokens: chunk.usage.completion_tokens || 0,
+    };
+  }
+}
+
+task.llm({
+  model: 'gpt-4',
+  usage,
+  response: fullContent,
+});
+
+task.output(fullContent);
+task.end();
+```

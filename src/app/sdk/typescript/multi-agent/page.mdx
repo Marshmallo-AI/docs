@@ -1,0 +1,303 @@
+---
+sidebar_position: 5
+---
+
+# Multi-Agent Systems
+
+For workflows with multiple agents, use `task.child()` to create child tasks. Child tasks are linked to the parent in the dashboard, showing the full execution hierarchy.
+
+## How It Works
+
+1. **Parent agent** receives the user request
+2. **Parent creates child tasks** for specialized agents
+3. **Each child** completes its work and returns results
+4. **Parent combines results** and responds to the user
+
+Each agent develops its own learnings independently, so specialized agents get specialized guidance.
+
+## Creating Child Tasks
+
+Use `task.child(agentName)` to create a child task:
+
+```typescript
+const parent = marlo.task(threadId, 'orchestrator').start();
+parent.input(userRequest);
+
+// Delegate to a child agent
+const child = parent.child('researcher').start();
+child.input('Find information about: ' + userRequest);
+
+// Child does its work...
+const result = await doResearch(userRequest);
+
+child.output(result);
+child.end();
+
+// Parent continues with child's result
+parent.output('Based on research: ' + result);
+parent.end();
+```
+
+## Example: Research Assistant
+
+A complete example with orchestrator, researcher, and writer agents:
+
+```typescript
+import * as marlo from '@marshmallo/marlo';
+import OpenAI from 'openai';
+
+await marlo.init(process.env.MARLO_API_KEY!);
+const client = new OpenAI();
+
+// Register all agents
+marlo.registerAgent(
+  'orchestrator',
+  'You coordinate research tasks by delegating to specialized agents.',
+  [],
+  [],
+  { model: 'gpt-4' }
+);
+
+marlo.registerAgent(
+  'researcher',
+  'You search for and gather information on topics.',
+  [
+    {
+      name: 'web_search',
+      description: 'Search the web for information',
+      parameters: { type: 'object', properties: { query: { type: 'string' } } },
+    },
+  ],
+  [],
+  { model: 'gpt-4' }
+);
+
+marlo.registerAgent(
+  'writer',
+  'You write clear summaries based on research findings.',
+  [],
+  [],
+  { model: 'gpt-4' }
+);
+
+async function webSearch(query: string) {
+  return { results: ['Source 1: ...', 'Source 2: ...'] };
+}
+
+async function researchTopic(userRequest: string, threadId: string): Promise<string> {
+  const parent = marlo.task(threadId, 'orchestrator').start();
+  parent.input(userRequest);
+  parent.reasoning("User wants research. I'll delegate to researcher, then writer.");
+
+  // Step 1: Research agent gathers information
+  const researcher = parent.child('researcher').start();
+  researcher.input('Find information about: ' + userRequest);
+
+  const searchResult = await webSearch(userRequest);
+  researcher.tool('web_search', { query: userRequest }, searchResult);
+
+  const researchResponse = await client.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      { role: 'system', content: 'Summarize search results.' },
+      { role: 'user', content: JSON.stringify(searchResult) },
+    ],
+  });
+
+  researcher.llm({
+    model: 'gpt-4',
+    usage: {
+      input_tokens: researchResponse.usage?.prompt_tokens || 0,
+      output_tokens: researchResponse.usage?.completion_tokens || 0,
+    },
+  });
+
+  const researchFindings = researchResponse.choices[0].message.content || '';
+  researcher.output(researchFindings);
+  researcher.end();
+
+  // Step 2: Writer agent creates final summary
+  const writer = parent.child('writer').start();
+  writer.input('Summarize these findings: ' + researchFindings);
+
+  const writeResponse = await client.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      { role: 'system', content: 'Write a clear, concise summary.' },
+      { role: 'user', content: researchFindings },
+    ],
+  });
+
+  writer.llm({
+    model: 'gpt-4',
+    usage: {
+      input_tokens: writeResponse.usage?.prompt_tokens || 0,
+      output_tokens: writeResponse.usage?.completion_tokens || 0,
+    },
+  });
+
+  const summary = writeResponse.choices[0].message.content || '';
+  writer.output(summary);
+  writer.end();
+
+  // Parent produces final response
+  const finalResponse = 'Based on my research: ' + summary;
+  parent.output(finalResponse);
+  parent.end();
+
+  return finalResponse;
+}
+
+// Run the multi-agent workflow
+const result = await researchTopic('What are the latest AI trends?', 'research-123');
+console.log(result);
+await marlo.shutdown();
+```
+
+## Nested Children
+
+Child tasks can create their own children for deeply nested workflows:
+
+```typescript
+const orchestrator = marlo.task(threadId, 'orchestrator').start();
+orchestrator.input(request);
+
+const teamLead = orchestrator.child('team-lead').start();
+teamLead.input('Coordinate this project');
+
+// Team lead delegates to specialists
+const analyst = teamLead.child('analyst').start();
+analyst.input('Analyze the data');
+analyst.output('Analysis complete');
+analyst.end();
+
+const designer = teamLead.child('designer').start();
+designer.input('Create mockups');
+designer.output('Designs ready');
+designer.end();
+
+teamLead.output('Project coordinated');
+teamLead.end();
+
+orchestrator.output('Work complete');
+orchestrator.end();
+```
+
+The dashboard shows the full hierarchy: orchestrator → team-lead → analyst/designer.
+
+## Parallel Children
+
+Run child tasks in parallel when they don't depend on each other:
+
+```typescript
+async function parallelResearch(userRequest: string, threadId: string) {
+  const parent = marlo.task(threadId, 'orchestrator').start();
+  parent.input(userRequest);
+
+  // Run multiple research tasks in parallel
+  const topics = ['AI', 'blockchain', 'quantum computing'];
+  
+  const results = await Promise.all(
+    topics.map(async (topic) => {
+      const researcher = parent.child('researcher').start();
+      researcher.input(`Research: ${topic}`);
+      
+      const result = await webSearch(topic);
+      researcher.tool('web_search', { query: topic }, result);
+      
+      researcher.output(JSON.stringify(result));
+      researcher.end();
+      
+      return result;
+    })
+  );
+
+  parent.output('Research complete: ' + JSON.stringify(results));
+  parent.end();
+}
+```
+
+## Per-Agent Learnings
+
+Each agent develops its own learnings based on its task history:
+
+- **Orchestrator** learns coordination patterns
+- **Researcher** learns search strategies
+- **Writer** learns summarization style
+
+When fetching learnings, each agent gets only its own:
+
+```typescript
+const researcher = parent.child('researcher').start();
+researcher.input(query);
+
+// Gets learnings specific to "researcher" agent
+const learnings = await researcher.getLearnings();
+
+// Apply researcher-specific learnings to system prompt...
+```
+
+## Dashboard View
+
+In the Marlo dashboard, multi-agent tasks appear as a tree:
+
+```
+📁 Task: "Research AI trends" (orchestrator)
+├── 📄 Input: "What are the latest AI trends?"
+├── 📝 Reasoning: "I'll delegate to researcher, then writer"
+├── 📁 Child Task (researcher)
+│   ├── 📄 Input: "Find information about AI trends"
+│   ├── 🔧 Tool: web_search(...)
+│   ├── 🤖 LLM Call: gpt-4
+│   └── 📄 Output: "Found 3 sources..."
+├── 📁 Child Task (writer)
+│   ├── 📄 Input: "Summarize these findings..."
+│   ├── 🤖 LLM Call: gpt-4
+│   └── 📄 Output: "Summary..."
+└── 📄 Output: "Based on my research..."
+```
+
+## Best Practices
+
+### Register All Agents First
+
+```typescript
+// ✅ Good: Register at startup
+marlo.registerAgent('orchestrator', ...);
+marlo.registerAgent('researcher', ...);
+marlo.registerAgent('writer', ...);
+
+// Then use in tasks
+const parent = marlo.task(..., 'orchestrator').start();
+```
+
+### Always End Tasks
+
+```typescript
+// ✅ Good: Always end child tasks
+const child = parent.child('researcher').start();
+try {
+  // ... work ...
+  child.output(result);
+} finally {
+  child.end();  // Always end, even on error
+}
+```
+
+### Log Parent Reasoning
+
+```typescript
+const parent = marlo.task(threadId, 'orchestrator').start();
+parent.input(request);
+
+// Log the decision process
+parent.reasoning(
+  'This is a complex technical question. ' +
+  "I'll delegate to the researcher for data gathering."
+);
+
+const researcher = parent.child('researcher').start();
+// ...
+```
+
+This helps Marlo understand the orchestration logic and generate better learnings.

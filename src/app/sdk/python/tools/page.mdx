@@ -1,0 +1,269 @@
+---
+sidebar_position: 3
+---
+
+# Tool Tracking
+
+When your agent calls tools, Marlo captures the tool name, inputs, outputs, and any errors. This data powers evaluation (did the agent use tools correctly?) and learning (how should it use tools differently?).
+
+## The @track_tool Decorator
+
+The simplest way to track tools is with the `@marlo.track_tool` decorator:
+
+```python
+import marlo
+
+@marlo.track_tool
+def lookup_order(order_id: str) -> dict:
+    """Find order details by order ID."""
+    return {"status": "shipped", "eta": "2024-01-15"}
+
+@marlo.track_tool
+async def search_products(query: str) -> list:
+    """Search the product catalog."""
+    return [{"id": "prod-1", "name": "Widget"}]
+```
+
+When a decorated function is called inside a `marlo.task()` context, Marlo automatically records:
+
+- **Tool name** - From the function name
+- **Input arguments** - All parameters passed to the function
+- **Output value** - The return value
+- **Errors** - Any exceptions raised
+
+## Using with Frameworks
+
+### LangChain
+
+The decorator works alongside LangChain's `@tool` decorator:
+
+```python
+from langchain_core.tools import tool
+import marlo
+
+@tool
+@marlo.track_tool
+def get_weather(city: str) -> str:
+    """Get current weather for a city."""
+    return f"Weather in {city}: 72°F and sunny"
+```
+
+> **Note:** Place `@marlo.track_tool` after `@tool` so it wraps the LangChain tool.
+
+### LangGraph
+
+For LangGraph agents, decorate your tool functions:
+
+```python
+from langgraph.prebuilt import create_react_agent
+import marlo
+
+@marlo.track_tool
+def search_emails(query: str) -> list:
+    """Search emails matching query."""
+    return [{"subject": "Meeting", "from": "alice@example.com"}]
+
+@marlo.track_tool
+def send_email(to: str, subject: str, body: str) -> dict:
+    """Send an email."""
+    return {"status": "sent", "message_id": "msg-123"}
+
+# Create agent with tracked tools
+tools = [search_emails, send_email]
+agent = create_react_agent(model, tools)
+```
+
+### CrewAI
+
+```python
+from crewai import Agent, Tool
+import marlo
+
+@marlo.track_tool
+def analyze_data(data: str) -> str:
+    """Analyze the provided data."""
+    return "Analysis complete: 3 insights found"
+
+tool = Tool(
+    name="Data Analyzer",
+    description="Analyzes data and returns insights",
+    func=analyze_data,
+)
+```
+
+## Sync and Async Support
+
+The `@track_tool` decorator works with both synchronous and asynchronous functions:
+
+```python
+@marlo.track_tool
+def sync_tool(param: str) -> str:
+    """Synchronous tool."""
+    return "result"
+
+@marlo.track_tool
+async def async_tool(param: str) -> str:
+    """Asynchronous tool."""
+    await some_async_operation()
+    return "result"
+```
+
+## Error Handling
+
+When a tool raises an exception, Marlo captures the error:
+
+```python
+@marlo.track_tool
+def risky_tool(param: str) -> str:
+    if not param:
+        raise ValueError("Parameter required")
+    return "success"
+
+with marlo.task(thread_id="user-123", agent="my-agent") as task:
+    task.input("Do something")
+    
+    try:
+        result = risky_tool("")  # Raises ValueError
+    except ValueError:
+        task.output("Sorry, something went wrong.")
+```
+
+The tool call event includes the error message, which helps Marlo understand failure patterns and generate learnings like "Always validate input before calling risky_tool."
+
+## Manual Tool Tracking
+
+For cases where the decorator isn't practical, use `task.tool()` directly:
+
+```python
+with marlo.task(thread_id="user-123", agent="my-agent") as task:
+    task.input("Check order status")
+    
+    # Call your tool
+    order_id = "12345"
+    result = external_api.get_order(order_id)
+    
+    # Record the tool call
+    task.tool(
+        name="get_order",
+        input={"order_id": order_id},
+        output=result,
+    )
+    
+    task.output(f"Your order status: {result['status']}")
+```
+
+### Recording Errors
+
+```python
+try:
+    result = external_api.get_order(order_id)
+    task.tool("get_order", {"order_id": order_id}, result)
+except ApiError as e:
+    task.tool("get_order", {"order_id": order_id}, None, error=str(e))
+```
+
+## Defining Tools in Agent Registration
+
+For full evaluation capabilities, include your tool definitions when registering the agent:
+
+```python
+marlo.agent(
+    name="support-agent",
+    system_prompt="You are a helpful support agent.",
+    tools=[
+        {
+            "name": "lookup_order",
+            "description": "Find order details by order ID",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "order_id": {
+                        "type": "string",
+                        "description": "The order ID to look up"
+                    }
+                },
+                "required": ["order_id"],
+            },
+        },
+        {
+            "name": "process_refund",
+            "description": "Process a refund for an order",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "order_id": {"type": "string"},
+                    "reason": {"type": "string"},
+                },
+                "required": ["order_id", "reason"],
+            },
+        },
+    ],
+    mcp=[],
+    model_config={"model": "gpt-4"},
+)
+```
+
+This helps Marlo's evaluation understand:
+- Which tools should have been used
+- Whether the tool was called with correct parameters
+- If the agent interpreted tool outputs correctly
+
+## Best Practices
+
+### Name Tools Clearly
+
+Tool names appear in traces and learnings. Use descriptive names:
+
+```python
+# Good
+@marlo.track_tool
+def get_user_profile(user_id: str) -> dict: ...
+
+# Less clear
+@marlo.track_tool
+def fetch(id: str) -> dict: ...
+```
+
+### Include Docstrings
+
+Docstrings help both your LLM and Marlo's evaluator understand what tools do:
+
+```python
+@marlo.track_tool
+def calculate_shipping(zip_code: str, weight_kg: float) -> dict:
+    """
+    Calculate shipping cost and estimated delivery date.
+    
+    Args:
+        zip_code: Destination ZIP code
+        weight_kg: Package weight in kilograms
+    
+    Returns:
+        Dict with 'cost' (float) and 'eta' (str) keys
+    """
+    ...
+```
+
+### Handle Sensitive Data
+
+If tools handle sensitive data, consider what gets logged:
+
+```python
+@marlo.track_tool
+def authenticate_user(username: str, password: str) -> dict:
+    """Authenticate user credentials."""
+    # The password will be captured in tool inputs!
+    # Consider masking or not tracking sensitive tools
+    ...
+```
+
+For sensitive tools, use manual tracking with sanitized inputs:
+
+```python
+result = authenticate(username, password)
+task.tool(
+    name="authenticate_user",
+    input={"username": username, "password": "***"},  # Masked
+    output={"authenticated": result["success"]},
+)
+```

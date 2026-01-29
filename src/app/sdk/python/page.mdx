@@ -2,9 +2,9 @@
 sidebar_position: 1
 ---
 
-# Python
+# Python SDK
 
-The Marlo SDK captures your agent's behavior and sends it to Marlo for evaluation and learning. This page covers how to install, configure, and use the SDK to track tasks, record interactions, and apply learnings.
+The Marlo Python SDK captures your agent's behavior and sends it to Marlo for evaluation and learning. In just a few lines of code, you can start tracking tasks, recording interactions, and applying learnings.
 
 ## Installation
 
@@ -12,9 +12,50 @@ The Marlo SDK captures your agent's behavior and sends it to Marlo for evaluatio
 pip install marlo-sdk
 ```
 
+## Quick Start
+
+Here's the fastest way to get Marlo working with your agent:
+
+```python
+import os
+import marlo
+from openai import OpenAI
+
+# 1. Initialize Marlo (once at startup)
+marlo.init(api_key=os.getenv("MARLO_API_KEY"))
+marlo.instrument_openai()  # Auto-capture all OpenAI calls
+
+# 2. Register your agent
+marlo.agent(
+    name="my-agent",
+    system_prompt="You are a helpful assistant.",
+    tools=[],
+    mcp=[],
+)
+
+# 3. Wrap your agent logic in a task
+client = OpenAI()
+
+with marlo.task(thread_id="user-123", agent="my-agent") as task:
+    task.input("What is 2 + 2?")
+    
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": "What is 2 + 2?"}]
+    )
+    
+    answer = response.choices[0].message.content
+    task.output(answer)
+
+# 4. Shutdown before exit
+marlo.shutdown()
+```
+
+That's it! Your agent's behavior is now being captured, evaluated, and turned into learnings.
+
 ## Configuration
 
-Initialize the SDK once when your application starts. You'll find your API key in Settings → Project at marshmallo.ai.
+Initialize the SDK once when your application starts. You'll find your API key in **Settings → Project** at [marshmallo.ai](https://marshmallo.ai).
 
 ```python
 import os
@@ -23,121 +64,45 @@ import marlo
 marlo.init(api_key=os.getenv("MARLO_API_KEY"))
 ```
 
+For async applications (FastAPI, LangGraph, etc.), use the async initializer:
+
+```python
+await marlo.init_async(api_key=os.getenv("MARLO_API_KEY"))
+```
+
+Or initialize in a background thread to avoid blocking:
+
+```python
+marlo.init_in_thread(api_key=os.getenv("MARLO_API_KEY"))
+```
+
+## Core Concepts
+
+### Tasks
+
+A **task** represents a single agent execution—from receiving user input to producing output. Wrap your agent logic with `marlo.task()`:
+
+```python
+with marlo.task(
+    thread_id="user-123-session-456",
+    agent="my-agent",
+    thread_name="Support Chat",
+) as task:
+    task.input("User's question here")
+    
+    # Your agent logic...
+    
+    task.output("Agent's response here")
+```
+
 **Parameters:**
-- `api_key` (str): Your Marlo API key from Settings → Project.
+- `thread_id` (str): Stable identifier for the conversation. Tasks with the same `thread_id` are grouped together.
+- `agent` (str): Name of the registered agent handling this task.
+- `thread_name` (str, optional): Human-readable label shown in the dashboard.
 
-## Automatic Instrumentation
+### Agents
 
-Marlo can automatically capture LLM calls and tool invocations, eliminating the need for manual tracking code.
-
-### LLM Instrumentation
-
-Instrument your LLM client to automatically capture all API calls:
-
-```python
-import marlo
-from openai import OpenAI
-
-marlo.init(api_key=os.getenv("MARLO_API_KEY"))
-marlo.instrument_openai()  # Call once after init
-
-client = OpenAI()
-
-with marlo.task(thread_id="user-123", agent="my-agent") as task:
-    task.input("What is the capital of France?")
-    
-    # This call is automatically tracked
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": "What is the capital of France?"}]
-    )
-    
-    task.output(response.choices[0].message.content)
-```
-
-What gets captured automatically:
-- Model name
-- Messages sent
-- Response content
-- Token usage (prompt, completion, reasoning)
-
-#### Anthropic
-
-```python
-import marlo
-from anthropic import Anthropic
-
-marlo.init(api_key=os.getenv("MARLO_API_KEY"))
-marlo.instrument_anthropic()
-
-client = Anthropic()
-
-with marlo.task(thread_id="user-123", agent="my-agent") as task:
-    task.input("Explain quantum computing")
-    
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=1024,
-        messages=[{"role": "user", "content": "Explain quantum computing"}]
-    )
-    
-    task.output(response.content[0].text)
-```
-
-#### Multiple Providers
-
-You can instrument multiple providers in the same application:
-
-```python
-marlo.init(api_key=os.getenv("MARLO_API_KEY"))
-marlo.instrument_openai()
-marlo.instrument_anthropic()
-```
-
-### Tool Tracking
-
-The `@marlo.track_tool` decorator automatically records tool calls when your agent invokes them:
-
-```python
-import marlo
-
-@marlo.track_tool
-def lookup_order(order_id: str) -> dict:
-    """Find order details by order ID."""
-    return {"status": "shipped", "eta": "2024-01-15"}
-
-@marlo.track_tool
-async def search_products(query: str) -> list:
-    """Search the product catalog."""
-    return [{"id": "prod-1", "name": "Widget"}]
-```
-
-When a decorated tool is called inside a `marlo.task()` context, Marlo automatically records:
-- Tool name (from function name)
-- Input arguments
-- Output value
-- Any exceptions (as errors)
-
-#### Using with LangChain
-
-The decorator works alongside LangChain's `@tool` decorator:
-
-```python
-from langchain_core.tools import tool
-import marlo
-
-@tool
-@marlo.track_tool
-def get_weather(city: str) -> str:
-    """Get current weather for a city."""
-    return f"Weather in {city}: 72°F and sunny"
-```
-
-Place `@marlo.track_tool` after `@tool` so it wraps the LangChain tool.
-
-## Register an Agent
-
-Before tracking tasks, register your agent. This tells Marlo what your agent is capable of, which is used during evaluation.
+Register your agent's configuration so Marlo knows what it's capable of:
 
 ```python
 marlo.agent(
@@ -159,324 +124,15 @@ marlo.agent(
 )
 ```
 
-**Parameters:**
-- `name` (str): Unique identifier for this agent.
-- `system_prompt` (str): The system prompt your agent uses.
-- `tools` (list[dict]): List of tools available to the agent. Each tool should have `name`, `description`, and `parameters`.
-- `mcp` (list[dict], optional): MCP server definitions. Pass `[]` if not using MCP.
-- `model_config` (dict, optional): Model settings such as model name and temperature.
+### Shutdown
 
-## Track a Task
-
-Wrap each agent execution with `marlo.task`. This creates a task context that captures all events.
-
-```python
-with marlo.task(
-    thread_id="user-123-session-456",
-    agent="support-agent",
-    thread_name="Order Inquiry",
-) as task:
-    task.input("Where is my order #12345?")
-
-    # Your agent logic here...
-    # LLM calls and tool calls are captured automatically if instrumented
-
-    task.output("Your order is shipped and arrives tomorrow.")
-```
-
-**Parameters:**
-- `thread_id` (str): Stable identifier for the conversation. Tasks with the same `thread_id` are grouped together.
-- `agent` (str): Name of the registered agent handling this task.
-- `thread_name` (str, optional): Human-readable label shown in the dashboard. Once set for a thread, it stays fixed.
-
-## Task Methods
-
-### task.input(text)
-
-Records the user input that started the task. Call this first inside the task context.
-
-```python
-task.input("What is the weather in Tokyo?")
-```
-
-- `text` (str): The user's input message.
-
-### task.output(text)
-
-Records the final response returned to the user. Call this before exiting the task context.
-
-```python
-task.output("Tokyo is 25C and sunny.")
-```
-
-- `text` (str): The agent's final response.
-
-### task.llm(...)
-
-Records an LLM call manually. Use this when automatic instrumentation isn't available.
-
-```python
-task.llm(
-    model="gpt-4",
-    usage={"input_tokens": 150, "output_tokens": 50},
-    messages=[{"role": "user", "content": "What is the weather?"}],
-    response="It is sunny.",
-)
-```
-
-- `model` (str): The model name.
-- `usage` (dict): Token usage with `input_tokens`, `output_tokens`, and optionally `reasoning_tokens`.
-- `messages` (list, optional): The messages sent to the model.
-- `response` (str, optional): The model's response text.
-
-### task.tool(...)
-
-Records a tool call manually. Use this when the `@marlo.track_tool` decorator isn't practical.
-
-```python
-task.tool(
-    name="lookup_order",
-    input={"order_id": "12345"},
-    output={"status": "shipped", "eta": "2024-01-15"},
-)
-```
-
-- `name` (str): The tool name. Should match a tool in your agent definition.
-- `input` (dict): The input passed to the tool.
-- `output` (Any): The output returned by the tool.
-- `error` (str, optional): Error message if the tool call failed.
-
-### task.reasoning(text)
-
-Records internal reasoning or chain-of-thought.
-
-```python
-task.reasoning("User is asking about order status. I should call lookup_order.")
-```
-
-- `text` (str): The reasoning or thought process.
-
-### task.error(message)
-
-Marks the task as failed. If an exception is raised inside the task context, the task is marked as error automatically.
-
-```python
-task.error("Tool returned invalid response")
-```
-
-- `message` (str): Description of the error.
-
-## Reasoning and Thinking Tokens
-
-Modern LLMs like Claude can expose their internal reasoning through extended thinking features. Marlo captures these tokens automatically when instrumentation is enabled.
-
-### Anthropic Extended Thinking
-
-When using Claude with extended thinking, reasoning tokens are captured automatically:
-
-```python
-import marlo
-from anthropic import Anthropic
-
-marlo.init(api_key=os.getenv("MARLO_API_KEY"))
-marlo.instrument_anthropic()
-
-client = Anthropic()
-
-with marlo.task(thread_id="user-123", agent="reasoning-agent") as task:
-    task.input("Solve this logic puzzle...")
-    
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=16000,
-        thinking={
-            "type": "enabled",
-            "budget_tokens": 10000
-        },
-        messages=[{"role": "user", "content": "Solve this logic puzzle..."}]
-    )
-    
-    output_text = ""
-    for block in response.content:
-        if block.type == "text":
-            output_text = block.text
-    
-    task.output(output_text)
-```
-
-What gets captured:
-- `reasoning_tokens`: Token count for internal reasoning
-- Full thinking content (when available)
-- Separate from completion tokens in usage tracking
-
-### Token Usage Breakdown
-
-The task context aggregates all token usage:
-
-```python
-{
-    "prompt_tokens": 150,
-    "completion_tokens": 200,
-    "reasoning_tokens": 5000,
-    "total_tokens": 5350,
-    "calls": 1
-}
-```
-
-## Fetch Learnings
-
-Learnings are guidance generated from past task outcomes. Use `task.get_learnings()` to fetch them and inject into your agent's context.
-
-```python
-with marlo.task(thread_id="user-123", agent="support-agent") as task:
-    task.input(user_message)
-
-    # Fetch learnings
-    learnings = task.get_learnings()
-
-    # Build system prompt with learnings
-    system_prompt = "You are a customer support agent."
-    if learnings:
-        active = learnings.get("active", [])
-        if active:
-            learnings_text = "\n".join(
-                f"- {obj['learning']}" for obj in active if obj.get("learning")
-            )
-            if learnings_text:
-                system_prompt += f"\n\nLearnings from past interactions:\n{learnings_text}"
-
-    # Use system_prompt in your LLM call...
-```
-
-**Returns:** A dict with the learning state, or `None` if no active learnings exist.
-
-```python
-{
-    "active": [
-        {
-            "learning_id": "learning-abc123",
-            "learning_key": "support-agent",
-            "learning": "Always verify order ID format before calling lookup_order",
-            "expected_outcome": "Reduces tool call failures",
-            "basis": "Multiple failed tool calls with invalid order IDs",
-            "confidence": 0.85,
-            "status": "active",
-            "agent_id": "support-agent",
-            "created_at": "2024-01-15T10:30:00Z",
-            "updated_at": "2024-01-15T10:30:00Z"
-        }
-    ],
-    "updated_at": "2024-01-15T10:30:00Z"
-}
-```
-
-- `active` (list): List of active learning objects. Each object contains:
-  - `learning` (str): The learning text to inject into prompts.
-  - `expected_outcome` (str): What improvement this learning should produce.
-  - `confidence` (float): Confidence score from 0 to 1.
-  - `learning_id`, `learning_key`, `agent_id`, `status`, `basis`, timestamps.
-- `updated_at` (str): When the learnings were last updated.
-
-## Multi-Agent Systems
-
-For workflows with multiple agents, use `task.child()` to create child tasks. Child tasks are linked to the parent in the dashboard, showing the full execution hierarchy.
-
-### How It Works
-
-1. The parent agent receives the user request
-2. The parent creates child tasks for specialized agents
-3. Each child completes its work and returns results
-4. The parent combines results and responds to the user
-
-### Example: Research Assistant
-
-```python
-import marlo
-
-marlo.init(api_key="your-api-key")
-marlo.instrument_openai()
-
-# Register all agents
-marlo.agent(
-    name="orchestrator",
-    system_prompt="You coordinate research tasks by delegating to specialized agents.",
-    tools=[],
-    mcp=[],
-    model_config={"model": "gpt-4"},
-)
-
-marlo.agent(
-    name="researcher",
-    system_prompt="You search for and gather information on topics.",
-    tools=[
-        {
-            "name": "web_search",
-            "description": "Search the web for information",
-            "parameters": {"type": "object", "properties": {"query": {"type": "string"}}},
-        }
-    ],
-    mcp=[],
-    model_config={"model": "gpt-4"},
-)
-
-marlo.agent(
-    name="writer",
-    system_prompt="You write clear summaries based on research findings.",
-    tools=[],
-    mcp=[],
-    model_config={"model": "gpt-4"},
-)
-
-@marlo.track_tool
-def web_search(query: str) -> dict:
-    """Search the web for information."""
-    return {"results": ["Source 1: ...", "Source 2: ..."]}
-
-
-def research_topic(user_request: str, thread_id: str) -> str:
-    with marlo.task(thread_id=thread_id, agent="orchestrator") as parent:
-        parent.input(user_request)
-        parent.reasoning("User wants research. I'll delegate to researcher, then writer.")
-
-        # Step 1: Research agent gathers information
-        with parent.child(agent="researcher") as researcher:
-            researcher.input("Find information about: " + user_request)
-
-            # Tool call is automatically tracked
-            search_result = web_search(user_request)
-
-            research_findings = "Found 3 relevant sources about the topic..."
-            researcher.output(research_findings)
-
-        # Step 2: Writer agent creates summary
-        with parent.child(agent="writer") as writer:
-            writer.input("Summarize these findings: " + research_findings)
-
-            summary = "Here is a summary of the research..."
-            writer.output(summary)
-
-        final_response = "Based on my research: " + summary
-        parent.output(final_response)
-        return final_response
-```
-
-### Key Points
-
-- Register all agents before using them in tasks
-- The parent task stays open while child tasks execute
-- Each child task has its own `input()` and `output()`
-- Child tasks appear nested under the parent in the dashboard
-- Learnings are generated per-agent, so each agent improves independently
-
-## Shutdown
-
-Call `marlo.shutdown()` before your application exits to ensure all pending events are sent.
+Always call `marlo.shutdown()` before your application exits to ensure all events are sent:
 
 ```python
 marlo.shutdown()
 ```
 
-For web applications, call this in your shutdown handler:
+For web frameworks:
 
 ```python
 # FastAPI
@@ -489,195 +145,10 @@ import atexit
 atexit.register(marlo.shutdown)
 ```
 
-## Full Example
+## What's Next?
 
-```python
-import os
-import marlo
-from openai import OpenAI
-
-# 1. Initialize and instrument
-marlo.init(api_key=os.getenv("MARLO_API_KEY"))
-marlo.instrument_openai()
-
-# 2. Define tools with automatic tracking
-@marlo.track_tool
-def lookup_order(order_id: str) -> dict:
-    """Find order details by order ID."""
-    return {"status": "shipped", "eta": "2024-01-15"}
-
-@marlo.track_tool
-def process_refund(order_id: str, reason: str) -> dict:
-    """Process a refund for an order."""
-    return {"refund_id": "ref-123", "status": "pending"}
-
-# 3. Register agent
-marlo.agent(
-    name="support-agent",
-    system_prompt="You are a helpful customer support agent.",
-    tools=[
-        {
-            "name": "lookup_order",
-            "description": "Find order details by order ID",
-            "parameters": {
-                "type": "object",
-                "properties": {"order_id": {"type": "string"}},
-                "required": ["order_id"],
-            },
-        },
-        {
-            "name": "process_refund",
-            "description": "Process a refund for an order",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "order_id": {"type": "string"},
-                    "reason": {"type": "string"},
-                },
-                "required": ["order_id", "reason"],
-            },
-        },
-    ],
-    mcp=[],
-    model_config={"model": "gpt-4"},
-)
-
-
-# 4. Handle requests
-def handle_message(user_input: str, thread_id: str) -> str:
-    with marlo.task(
-        thread_id=thread_id,
-        agent="support-agent",
-        thread_name="Support Chat",
-    ) as task:
-        task.input(user_input)
-
-        # Fetch and apply learnings
-        learnings = task.get_learnings()
-        system_prompt = "You are a helpful customer support agent."
-        if learnings:
-            active = learnings.get("active", [])
-            if active:
-                learnings_text = "\n".join(
-                    f"- {obj['learning']}" for obj in active if obj.get("learning")
-                )
-                if learnings_text:
-                    system_prompt += f"\n\nLearnings:\n{learnings_text}"
-
-        # Build messages
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_input},
-        ]
-
-        # Define tools for OpenAI
-        tools = [
-            {
-                "type": "function",
-                "function": {
-                    "name": "lookup_order",
-                    "description": "Find order details by order ID",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {"order_id": {"type": "string"}},
-                        "required": ["order_id"],
-                    },
-                },
-            },
-        ]
-
-        # Call OpenAI - automatically tracked
-        client = OpenAI()
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=messages,
-            tools=tools,
-        )
-
-        # Handle tool calls
-        message = response.choices[0].message
-        if message.tool_calls:
-            for tool_call in message.tool_calls:
-                if tool_call.function.name == "lookup_order":
-                    import json
-                    args = json.loads(tool_call.function.arguments)
-                    result = lookup_order(**args)  # Automatically tracked
-
-        final_response = message.content or "I'll help you with that."
-        task.output(final_response)
-        return final_response
-
-
-# 5. Use the handler
-response = handle_message("Where is my order ORD-123?", thread_id="user-456-session-789")
-print(response)
-
-# 6. Shutdown before exit
-marlo.shutdown()
-```
-
-## Manual Tracking Reference
-
-If you prefer explicit control or use an unsupported LLM provider, you can track events manually:
-
-```python
-with marlo.task(thread_id="user-123", agent="my-agent") as task:
-    task.input("Hello")
-
-    # Manual tool tracking
-    result = my_custom_tool(arg="value")
-    task.tool("my_custom_tool", {"arg": "value"}, result)
-
-    # Manual LLM tracking
-    response = my_custom_llm_call(prompt="Hello")
-    task.llm(
-        model="custom-model",
-        usage={"input_tokens": 50, "output_tokens": 25},
-        messages=[{"role": "user", "content": "Hello"}],
-        response=response.text,
-    )
-
-    task.output(response.text)
-```
-
-Both automatic and manual tracking can be used in the same application.
-
-## API Reference
-
-### marlo.init(api_key)
-
-Initialize the SDK. Call once at application startup.
-
-### marlo.instrument_openai()
-
-Instrument the OpenAI client to automatically capture all chat completion calls. Call once after `marlo.init()`.
-
-### marlo.instrument_anthropic()
-
-Instrument the Anthropic client to automatically capture all message creation calls. Supports extended thinking token capture.
-
-### @marlo.track_tool
-
-Decorator that automatically tracks tool invocations. Works with sync and async functions.
-
-### marlo.get_current_task()
-
-Returns the currently active TaskContext, or None if not inside a task. Useful for recording events from nested functions.
-
-```python
-task = marlo.get_current_task()
-if task:
-    task.reasoning("Custom reasoning from helper function")
-```
-
-### marlo.agent(...)
-
-Register an agent definition with Marlo.
-
-### marlo.task(...)
-
-Create a task context for tracking agent execution.
-
-### marlo.shutdown()
-
-Flush pending events and shut down the SDK. Call before application exit.
+- [**Auto Instrumentation**](/sdk/python/instrumentation) - Automatically capture LLM calls from OpenAI, Anthropic, and LiteLLM
+- [**Tool Tracking**](/sdk/python/tools) - Record tool calls with the `@track_tool` decorator
+- [**Learnings**](/sdk/python/learnings) - Fetch and apply learnings to improve your agent
+- [**Multi-Agent**](/sdk/python/multi-agent) - Track complex multi-agent workflows
+- [**API Reference**](/sdk/python/reference) - Complete method documentation

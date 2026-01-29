@@ -1,0 +1,299 @@
+---
+sidebar_position: 4
+---
+
+# Fetching & Applying Learnings
+
+Learnings are actionable guidance generated from your agent's past successes and failures. By fetching and injecting learnings into your agent's context, you enable it to improve automatically over time.
+
+## The Learning Loop
+
+1. **Your agent runs tasks** → Marlo captures behavior
+2. **Tasks are evaluated** → Rewards score quality and explain issues
+3. **Learnings are generated** → Patterns become actionable guidance
+4. **You fetch learnings** → Inject them into your agent's context
+5. **Agent improves** → Fewer repeated mistakes
+
+## Fetching Learnings
+
+Use `task.getLearnings()` to fetch active learnings for the current agent:
+
+```typescript
+const task = marlo.task('user-123', 'support-agent').start();
+task.input(userMessage);
+
+// Fetch learnings for this agent
+const learnings = await task.getLearnings();
+
+if (learnings) {
+  console.log(`Found ${learnings.active?.length || 0} active learnings`);
+}
+```
+
+### Response Structure
+
+```typescript
+interface LearningState {
+  active: Array<{
+    learning_id: string;
+    learning_key: string;
+    learning: string;
+    expected_outcome: string;
+    basis: string;
+    confidence: number;
+    status: string;
+    agent_id: string;
+    created_at: string;
+    updated_at: string;
+  }>;
+  updated_at: string;
+}
+```
+
+**Key fields:**
+- `active` - List of active learning objects
+- `learning` - The guidance text to inject into prompts
+- `expected_outcome` - What improvement this learning should produce
+- `confidence` - Score from 0 to 1 indicating reliability
+
+## Injecting into System Prompt
+
+The most common pattern is appending learnings to your system prompt:
+
+```typescript
+const task = marlo.task('user-123', 'support-agent').start();
+task.input(userMessage);
+
+// Start with base system prompt
+let systemPrompt = 'You are a helpful customer support agent.';
+
+// Fetch and append learnings
+const learnings = await task.getLearnings();
+if (learnings) {
+  const active = learnings.active as Array<{ learning?: string }> | undefined;
+  if (active && active.length > 0) {
+    const learningsText = active
+      .filter((obj) => obj.learning)
+      .map((obj) => `- ${obj.learning}`)
+      .join('\n');
+    if (learningsText) {
+      systemPrompt += `\n\nLearnings from past interactions:\n${learningsText}`;
+    }
+  }
+}
+
+// Use the enhanced system prompt
+const response = await client.chat.completions.create({
+  model: 'gpt-4',
+  messages: [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userMessage },
+  ],
+});
+```
+
+## Complete Example
+
+```typescript
+import * as marlo from '@marshmallo/marlo';
+import OpenAI from 'openai';
+
+await marlo.init(process.env.MARLO_API_KEY!);
+
+marlo.registerAgent(
+  'support-agent',
+  'You are a helpful customer support agent.',
+  [
+    {
+      name: 'lookup_order',
+      description: 'Find order details by order ID',
+      parameters: {
+        type: 'object',
+        properties: { order_id: { type: 'string' } },
+        required: ['order_id'],
+      },
+    },
+  ],
+  [],
+  { model: 'gpt-4' }
+);
+
+async function lookupOrder(orderId: string) {
+  return { status: 'shipped', eta: '2024-01-15' };
+}
+
+async function handleMessage(
+  userInput: string,
+  threadId: string
+): Promise<string> {
+  const task = marlo.task(threadId, 'support-agent', 'Support Chat').start();
+  task.input(userInput);
+
+  // Build system prompt with learnings
+  let systemPrompt = 'You are a helpful customer support agent.';
+  
+  const learnings = await task.getLearnings();
+  if (learnings) {
+    const active = learnings.active as Array<{ learning?: string }> | undefined;
+    if (active && active.length > 0) {
+      const learningsText = active
+        .filter((obj) => obj.learning)
+        .map((obj) => `- ${obj.learning}`)
+        .join('\n');
+      if (learningsText) {
+        systemPrompt += `\n\nLearnings:\n${learningsText}`;
+      }
+    }
+  }
+
+  // Record reasoning
+  task.reasoning('User is asking about an order. I should look it up.');
+
+  // Make LLM call
+  const client = new OpenAI();
+  const response = await client.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userInput },
+    ],
+  });
+
+  task.llm({
+    model: 'gpt-4',
+    usage: {
+      input_tokens: response.usage?.prompt_tokens || 0,
+      output_tokens: response.usage?.completion_tokens || 0,
+    },
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userInput },
+    ],
+    response: response.choices[0].message.content || '',
+  });
+
+  // Handle tool calls if needed
+  const orderResult = await lookupOrder('ORD-123');
+  task.tool('lookup_order', { order_id: 'ORD-123' }, orderResult);
+
+  const responseText = response.choices[0].message.content || '';
+  task.output(responseText);
+  task.end();
+
+  return responseText;
+}
+
+// Use the handler
+const response = await handleMessage('Where is my order ORD-123?', 'user-456');
+await marlo.shutdown();
+```
+
+## Alternative Injection Patterns
+
+### As a Separate Message
+
+```typescript
+const messages: OpenAI.ChatCompletionMessageParam[] = [
+  { role: 'system', content: baseSystemPrompt },
+];
+
+const learnings = await task.getLearnings();
+if (learnings?.active?.length) {
+  const learningsText = learnings.active
+    .map((obj: { learning?: string }) => `- ${obj.learning}`)
+    .filter(Boolean)
+    .join('\n');
+  
+  messages.push({
+    role: 'system',
+    content: `Important guidance from past interactions:\n${learningsText}`,
+  });
+}
+
+messages.push({ role: 'user', content: userMessage });
+```
+
+### Filtered by Confidence
+
+Only apply high-confidence learnings:
+
+```typescript
+const learnings = await task.getLearnings();
+if (learnings) {
+  const highConfidence = (learnings.active || []).filter(
+    (obj: { confidence?: number }) => (obj.confidence || 0) >= 0.7
+  );
+  // Use highConfidence list...
+}
+```
+
+## Type Safety
+
+Create a typed helper for working with learnings:
+
+```typescript
+interface Learning {
+  learning_id: string;
+  learning: string;
+  expected_outcome: string;
+  confidence: number;
+}
+
+interface LearningState {
+  active: Learning[];
+  updated_at: string;
+}
+
+function formatLearnings(learnings: LearningState | null): string {
+  if (!learnings?.active?.length) {
+    return '';
+  }
+  
+  return learnings.active
+    .filter((l) => l.learning && l.confidence >= 0.5)
+    .map((l) => `- ${l.learning}`)
+    .join('\n');
+}
+
+// Usage
+const learnings = await task.getLearnings() as LearningState | null;
+const learningsText = formatLearnings(learnings);
+if (learningsText) {
+  systemPrompt += `\n\nLearnings:\n${learningsText}`;
+}
+```
+
+## Caching Learnings
+
+For high-traffic applications, cache learnings to reduce API calls:
+
+```typescript
+const learningsCache = new Map<string, {
+  learnings: LearningState | null;
+  timestamp: number;
+}>();
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getCachedLearnings(
+  task: marlo.TaskContext,
+  agentName: string
+): Promise<LearningState | null> {
+  const now = Date.now();
+  const cached = learningsCache.get(agentName);
+  
+  if (cached && (now - cached.timestamp) < CACHE_TTL) {
+    return cached.learnings;
+  }
+  
+  const learnings = await task.getLearnings();
+  learningsCache.set(agentName, {
+    learnings: learnings as LearningState | null,
+    timestamp: now,
+  });
+  
+  return learnings as LearningState | null;
+}
+```
+
+Learnings typically don't change rapidly, so a 5-minute cache is usually appropriate.

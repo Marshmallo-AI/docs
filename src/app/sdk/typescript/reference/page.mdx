@@ -1,0 +1,294 @@
+---
+sidebar_position: 6
+---
+
+# API Reference
+
+Complete reference for all Marlo TypeScript SDK functions and methods.
+
+## Initialization
+
+### marlo.init(apiKey)
+
+Initialize the SDK. Call once at application startup. Returns a Promise.
+
+```typescript
+await marlo.init(process.env.MARLO_API_KEY!);
+```
+
+**Parameters:**
+- `apiKey` (string): Your Marlo API key from Settings → Project
+
+---
+
+### marlo.shutdown()
+
+Flush pending events and shut down the SDK. Call before application exit. Returns a Promise.
+
+```typescript
+await marlo.shutdown();
+```
+
+## Agent Registration
+
+### marlo.registerAgent(name, systemPrompt, tools, mcp?, modelConfig?)
+
+Register an agent definition with Marlo. Call once per agent, typically at application startup.
+
+```typescript
+marlo.registerAgent(
+  'support-agent',
+  'You are a helpful customer support agent.',
+  [
+    {
+      name: 'lookup_order',
+      description: 'Find order details by order ID',
+      parameters: {
+        type: 'object',
+        properties: { order_id: { type: 'string' } },
+        required: ['order_id'],
+      },
+    },
+  ],
+  [],
+  { model: 'gpt-4' }
+);
+```
+
+**Parameters:**
+- `name` (string): Unique identifier for this agent
+- `systemPrompt` (string): The system prompt your agent uses
+- `tools` (ToolDefinition[]): List of tools available to the agent. Each tool should have:
+  - `name` (string): Tool name
+  - `description` (string): What the tool does
+  - `parameters` (object): JSON Schema defining the tool's parameters
+- `mcp` (McpDefinition[] | null, optional): MCP server definitions. Pass `[]` if not using MCP
+- `modelConfig` (ModelConfig | null, optional): Model settings such as model name and temperature
+
+## Task Context
+
+### marlo.task(threadId, agent, threadName?)
+
+Create a task context for tracking agent execution. Returns a TaskBuilder.
+
+```typescript
+const task = marlo.task(
+  'user-123-session-456',
+  'support-agent',
+  'Support Chat'
+);
+```
+
+**Parameters:**
+- `threadId` (string): Stable identifier for the conversation. Tasks with the same `threadId` are grouped together
+- `agent` (string): Name of the registered agent handling this task
+- `threadName` (string, optional): Human-readable label shown in the dashboard
+
+**Returns:** `TaskBuilder` object with `.start()` method
+
+---
+
+### taskBuilder.start()
+
+Start the task and return the active TaskContext.
+
+```typescript
+const task = marlo.task('user-123', 'my-agent').start();
+```
+
+**Returns:** `TaskContext` object
+
+## TaskContext Methods
+
+### task.input(text)
+
+Records the user input that started the task. Call first after starting the task.
+
+```typescript
+task.input('What is the weather in Tokyo?');
+```
+
+**Parameters:**
+- `text` (string): The user's input message
+
+---
+
+### task.output(text)
+
+Records the final response returned to the user. Call before ending the task.
+
+```typescript
+task.output('Tokyo is 25°C and sunny.');
+```
+
+**Parameters:**
+- `text` (string): The agent's final response
+
+---
+
+### task.llm(params)
+
+Records an LLM call.
+
+```typescript
+task.llm({
+  model: 'gpt-4',
+  usage: { input_tokens: 150, output_tokens: 50 },
+  messages: [{ role: 'user', content: 'What is the weather?' }],
+  response: 'It is sunny.',
+});
+```
+
+**Parameters:**
+- `params` (object):
+  - `model` (string): The model name
+  - `usage` (TokenUsage): Token usage with:
+    - `input_tokens` (number)
+    - `output_tokens` (number)
+    - `reasoning_tokens` (number, optional)
+    - `total_tokens` (number, optional)
+  - `messages` (unknown[], optional): The messages sent to the model
+  - `response` (string, optional): The model's response text
+
+---
+
+### task.tool(name, input, output, error?)
+
+Records a tool call.
+
+```typescript
+task.tool(
+  'lookup_order',
+  { order_id: '12345' },
+  { status: 'shipped', eta: '2024-01-15' }
+);
+```
+
+**Parameters:**
+- `name` (string): The tool name. Should match a tool in your agent definition
+- `input` (Record<string, unknown>): The input passed to the tool
+- `output` (unknown): The output returned by the tool
+- `error` (string, optional): Error message if the tool call failed
+
+---
+
+### task.reasoning(text)
+
+Records internal reasoning or chain-of-thought.
+
+```typescript
+task.reasoning('User is asking about order status. I should call lookup_order.');
+```
+
+**Parameters:**
+- `text` (string): The reasoning or thought process
+
+---
+
+### task.error(message)
+
+Marks the task as failed. Call before `task.end()` if an error occurred.
+
+```typescript
+task.error('Tool returned invalid response');
+```
+
+**Parameters:**
+- `message` (string): Description of the error
+
+---
+
+### task.child(agent)
+
+Creates a child task for multi-agent workflows. Returns a new TaskBuilder.
+
+```typescript
+const child = parent.child('researcher');
+const childTask = child.start();
+```
+
+**Parameters:**
+- `agent` (string): Name of the registered agent for the child task
+
+**Returns:** `TaskBuilder` object
+
+---
+
+### task.getLearnings()
+
+Fetches active learnings for the current agent. Returns a Promise.
+
+```typescript
+const learnings = await task.getLearnings();
+```
+
+**Returns:** `LearningState | null`
+
+```typescript
+interface LearningState {
+  active: Array<{
+    learning_id: string;
+    learning_key: string;
+    learning: string;
+    expected_outcome: string;
+    basis: string;
+    confidence: number;
+    status: string;
+    agent_id: string;
+    created_at: string;
+    updated_at: string;
+  }>;
+  updated_at: string;
+}
+```
+
+---
+
+### task.end(hasError?)
+
+Finalizes the task and sends all events.
+
+```typescript
+task.end();
+```
+
+**Parameters:**
+- `hasError` (boolean, optional): Pass `true` to mark the task as failed
+
+## Type Definitions
+
+### ToolDefinition
+
+```typescript
+interface ToolDefinition {
+  name: string;
+  description: string;
+  parameters: {
+    type: 'object';
+    properties: Record<string, unknown>;
+    required?: string[];
+  };
+}
+```
+
+### ModelConfig
+
+```typescript
+interface ModelConfig {
+  model: string;
+  temperature?: number;
+  max_tokens?: number;
+  [key: string]: unknown;
+}
+```
+
+### TokenUsage
+
+```typescript
+interface TokenUsage {
+  input_tokens: number;
+  output_tokens: number;
+  reasoning_tokens?: number;
+  total_tokens?: number;
+}
+```

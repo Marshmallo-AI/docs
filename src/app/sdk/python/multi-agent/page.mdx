@@ -1,0 +1,285 @@
+---
+sidebar_position: 5
+---
+
+# Multi-Agent Systems
+
+For workflows with multiple agents, use `task.child()` to create child tasks. Child tasks are linked to the parent in the dashboard, showing the full execution hierarchy.
+
+## How It Works
+
+1. **Parent agent** receives the user request
+2. **Parent creates child tasks** for specialized agents
+3. **Each child** completes its work and returns results
+4. **Parent combines results** and responds to the user
+
+Each agent develops its own learnings independently, so specialized agents get specialized guidance.
+
+## Creating Child Tasks
+
+Use `task.child(agent_name)` to create a child task context:
+
+```python
+with marlo.task(thread_id=thread_id, agent="orchestrator") as parent:
+    parent.input(user_request)
+    
+    # Delegate to a child agent
+    with parent.child(agent="researcher") as child:
+        child.input("Find information about: " + user_request)
+        
+        # Child does its work...
+        result = do_research(user_request)
+        
+        child.output(result)
+    
+    # Parent continues with child's result
+    parent.output("Based on research: " + result)
+```
+
+## Example: Research Assistant
+
+A complete example with orchestrator, researcher, and writer agents:
+
+```python
+import marlo
+from openai import OpenAI
+
+marlo.init(api_key="your-api-key")
+marlo.instrument_openai()
+client = OpenAI()
+
+# Register all agents
+marlo.agent(
+    name="orchestrator",
+    system_prompt="You coordinate research tasks by delegating to specialized agents.",
+    tools=[],
+    mcp=[],
+    model_config={"model": "gpt-4"},
+)
+
+marlo.agent(
+    name="researcher",
+    system_prompt="You search for and gather information on topics.",
+    tools=[
+        {
+            "name": "web_search",
+            "description": "Search the web for information",
+            "parameters": {"type": "object", "properties": {"query": {"type": "string"}}},
+        }
+    ],
+    mcp=[],
+    model_config={"model": "gpt-4"},
+)
+
+marlo.agent(
+    name="writer",
+    system_prompt="You write clear summaries based on research findings.",
+    tools=[],
+    mcp=[],
+    model_config={"model": "gpt-4"},
+)
+
+
+@marlo.track_tool
+def web_search(query: str) -> dict:
+    """Search the web for information."""
+    # Your search implementation
+    return {"results": ["Source 1: ...", "Source 2: ..."]}
+
+
+def research_topic(user_request: str, thread_id: str) -> str:
+    with marlo.task(thread_id=thread_id, agent="orchestrator") as parent:
+        parent.input(user_request)
+        parent.reasoning("User wants research. I'll delegate to researcher, then writer.")
+
+        # Step 1: Research agent gathers information
+        with parent.child(agent="researcher") as researcher:
+            researcher.input("Find information about: " + user_request)
+            
+            # Tool call is automatically tracked
+            search_result = web_search(user_request)
+            
+            # LLM call to synthesize findings
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "Summarize search results."},
+                    {"role": "user", "content": str(search_result)},
+                ],
+            )
+            
+            research_findings = response.choices[0].message.content
+            researcher.output(research_findings)
+
+        # Step 2: Writer agent creates final summary
+        with parent.child(agent="writer") as writer:
+            writer.input("Summarize these findings: " + research_findings)
+            
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "Write a clear, concise summary."},
+                    {"role": "user", "content": research_findings},
+                ],
+            )
+            
+            summary = response.choices[0].message.content
+            writer.output(summary)
+
+        # Parent produces final response
+        final_response = "Based on my research: " + summary
+        parent.output(final_response)
+        return final_response
+
+
+# Run the multi-agent workflow
+result = research_topic("What are the latest AI trends?", "research-123")
+print(result)
+marlo.shutdown()
+```
+
+## Nested Children
+
+Child tasks can create their own children for deeply nested workflows:
+
+```python
+with marlo.task(thread_id=thread_id, agent="orchestrator") as orchestrator:
+    orchestrator.input(request)
+    
+    with orchestrator.child(agent="team-lead") as team_lead:
+        team_lead.input("Coordinate this project")
+        
+        # Team lead delegates to specialists
+        with team_lead.child(agent="analyst") as analyst:
+            analyst.input("Analyze the data")
+            analyst.output("Analysis complete")
+        
+        with team_lead.child(agent="designer") as designer:
+            designer.input("Create mockups")
+            designer.output("Designs ready")
+        
+        team_lead.output("Project coordinated")
+    
+    orchestrator.output("Work complete")
+```
+
+The dashboard shows the full hierarchy: orchestrator → team-lead → analyst/designer.
+
+## Parallel Children
+
+Run child tasks in parallel when they don't depend on each other:
+
+```python
+import asyncio
+
+async def parallel_research(user_request: str, thread_id: str):
+    with marlo.task(thread_id=thread_id, agent="orchestrator") as parent:
+        parent.input(user_request)
+        
+        # Run multiple research tasks in parallel
+        async def research_topic(topic: str):
+            with parent.child(agent="researcher") as researcher:
+                researcher.input(f"Research: {topic}")
+                result = await async_search(topic)
+                researcher.output(result)
+                return result
+        
+        results = await asyncio.gather(
+            research_topic("AI"),
+            research_topic("blockchain"),
+            research_topic("quantum computing"),
+        )
+        
+        parent.output("Research complete: " + str(results))
+```
+
+## Per-Agent Learnings
+
+Each agent develops its own learnings based on its task history:
+
+- **Orchestrator** learns coordination patterns ("Delegate complex queries to the researcher first")
+- **Researcher** learns search strategies ("Use specific keywords for technical topics")
+- **Writer** learns summarization style ("Keep summaries under 200 words")
+
+When fetching learnings, each agent gets only its own:
+
+```python
+with parent.child(agent="researcher") as researcher:
+    researcher.input(query)
+    
+    # Gets learnings specific to "researcher" agent
+    learnings = researcher.get_learnings()
+    
+    # Apply researcher-specific learnings...
+```
+
+## Dashboard View
+
+In the Marlo dashboard, multi-agent tasks appear as a tree:
+
+```
+📁 Task: "Research AI trends" (orchestrator)
+├── 📄 Input: "What are the latest AI trends?"
+├── 📝 Reasoning: "I'll delegate to researcher, then writer"
+├── 📁 Child Task (researcher)
+│   ├── 📄 Input: "Find information about AI trends"
+│   ├── 🔧 Tool: web_search(...)
+│   ├── 🤖 LLM Call: gpt-4
+│   └── 📄 Output: "Found 3 sources..."
+├── 📁 Child Task (writer)
+│   ├── 📄 Input: "Summarize these findings..."
+│   ├── 🤖 LLM Call: gpt-4
+│   └── 📄 Output: "Summary..."
+└── 📄 Output: "Based on my research..."
+```
+
+Click into any child task to see its full trace, reward, and learnings.
+
+## Best Practices
+
+### Register All Agents First
+
+Register all agents before using them in tasks:
+
+```python
+# ✅ Good: Register at startup
+marlo.agent(name="orchestrator", ...)
+marlo.agent(name="researcher", ...)
+marlo.agent(name="writer", ...)
+
+# Then use in tasks
+with marlo.task(..., agent="orchestrator") as parent:
+    ...
+```
+
+### Clear Responsibility Boundaries
+
+Each agent should have a focused role:
+
+```python
+# ✅ Good: Clear, focused roles
+marlo.agent(name="data-fetcher", system_prompt="You retrieve data from APIs.")
+marlo.agent(name="data-analyzer", system_prompt="You analyze data and find patterns.")
+marlo.agent(name="report-writer", system_prompt="You write reports from analysis.")
+
+# ❌ Avoid: Overlapping responsibilities
+marlo.agent(name="agent-1", system_prompt="You do various tasks...")
+```
+
+### Log Parent Reasoning
+
+Record why the parent makes delegation decisions:
+
+```python
+with marlo.task(thread_id=thread_id, agent="orchestrator") as parent:
+    parent.input(request)
+    
+    # Log the decision process
+    parent.reasoning("This is a complex technical question. "
+                    "I'll delegate to the researcher for data gathering.")
+    
+    with parent.child(agent="researcher") as researcher:
+        ...
+```
+
+This helps Marlo understand the orchestration logic and generate better learnings.

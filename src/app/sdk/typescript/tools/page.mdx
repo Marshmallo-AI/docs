@@ -1,0 +1,287 @@
+---
+sidebar_position: 3
+---
+
+# Tool Tracking
+
+When your agent calls tools, Marlo captures the tool name, inputs, outputs, and any errors. This data powers evaluation (did the agent use tools correctly?) and learning (how should it use tools differently?).
+
+## Recording Tool Calls
+
+Use `task.tool()` to record each tool invocation:
+
+```typescript
+const task = marlo.task('user-123', 'my-agent').start();
+task.input('Check order status for ORD-123');
+
+// Call your tool
+const orderId = 'ORD-123';
+const result = await lookupOrder(orderId);
+
+// Record the tool call
+task.tool(
+  'lookup_order',
+  { order_id: orderId },
+  result
+);
+
+task.output(`Your order status: ${result.status}`);
+task.end();
+```
+
+## Parameters
+
+```typescript
+task.tool(
+  name: string,      // Tool name - should match agent definition
+  input: object,     // Input arguments passed to the tool
+  output: any,       // Return value from the tool
+  error?: string     // Optional error message if tool failed
+);
+```
+
+## Example with Multiple Tools
+
+```typescript
+import * as marlo from '@marshmallo/marlo';
+
+await marlo.init(process.env.MARLO_API_KEY!);
+
+marlo.registerAgent(
+  'support-agent',
+  'You are a helpful customer support agent.',
+  [
+    {
+      name: 'lookup_order',
+      description: 'Find order details by order ID',
+      parameters: {
+        type: 'object',
+        properties: { order_id: { type: 'string' } },
+        required: ['order_id'],
+      },
+    },
+    {
+      name: 'process_refund',
+      description: 'Process a refund for an order',
+      parameters: {
+        type: 'object',
+        properties: {
+          order_id: { type: 'string' },
+          reason: { type: 'string' },
+        },
+        required: ['order_id', 'reason'],
+      },
+    },
+  ],
+  [],
+  { model: 'gpt-4' }
+);
+
+// Tool implementations
+async function lookupOrder(orderId: string) {
+  return { status: 'shipped', eta: '2024-01-15' };
+}
+
+async function processRefund(orderId: string, reason: string) {
+  return { refund_id: 'ref-123', status: 'pending' };
+}
+
+// Handle a request
+async function handleRequest(userInput: string, threadId: string) {
+  const task = marlo.task(threadId, 'support-agent').start();
+  task.input(userInput);
+
+  // First tool call
+  const orderResult = await lookupOrder('ORD-123');
+  task.tool('lookup_order', { order_id: 'ORD-123' }, orderResult);
+
+  // Second tool call
+  const refundResult = await processRefund('ORD-123', 'Customer request');
+  task.tool(
+    'process_refund',
+    { order_id: 'ORD-123', reason: 'Customer request' },
+    refundResult
+  );
+
+  task.output('Refund processed successfully.');
+  task.end();
+}
+```
+
+## Error Handling
+
+Record errors when tools fail:
+
+```typescript
+const task = marlo.task('user-123', 'my-agent').start();
+task.input('Check order status');
+
+try {
+  const result = await lookupOrder('INVALID-ID');
+  task.tool('lookup_order', { order_id: 'INVALID-ID' }, result);
+} catch (error) {
+  // Record the failed tool call
+  task.tool(
+    'lookup_order',
+    { order_id: 'INVALID-ID' },
+    null,
+    error instanceof Error ? error.message : 'Unknown error'
+  );
+  
+  task.output('Sorry, I could not find that order.');
+}
+
+task.end();
+```
+
+The error information helps Marlo understand failure patterns and generate learnings like "Validate order ID format before calling lookup_order."
+
+## Wrapper Function Pattern
+
+Create wrapper functions to automatically track tool calls:
+
+```typescript
+function trackedTool<TInput extends object, TOutput>(
+  task: marlo.TaskContext,
+  name: string,
+  fn: (input: TInput) => Promise<TOutput>
+) {
+  return async (input: TInput): Promise<TOutput> => {
+    try {
+      const result = await fn(input);
+      task.tool(name, input, result);
+      return result;
+    } catch (error) {
+      task.tool(
+        name,
+        input,
+        null,
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+      throw error;
+    }
+  };
+}
+
+// Usage
+const task = marlo.task('user-123', 'my-agent').start();
+
+const trackedLookup = trackedTool(task, 'lookup_order', lookupOrder);
+const result = await trackedLookup({ order_id: 'ORD-123' });
+```
+
+## LangChain Integration
+
+When using LangChain tools, track calls after execution:
+
+```typescript
+import { DynamicTool } from '@langchain/core/tools';
+
+const lookupOrderTool = new DynamicTool({
+  name: 'lookup_order',
+  description: 'Find order details by order ID',
+  func: async (orderId: string) => {
+    const result = await lookupOrder(orderId);
+    
+    // Track in the current task context
+    const task = getCurrentTask(); // Your task context management
+    if (task) {
+      task.tool('lookup_order', { order_id: orderId }, result);
+    }
+    
+    return JSON.stringify(result);
+  },
+});
+```
+
+## Defining Tools in Agent Registration
+
+Include tool definitions when registering your agent for full evaluation capabilities:
+
+```typescript
+marlo.registerAgent(
+  'support-agent',
+  'You are a helpful customer support agent.',
+  [
+    {
+      name: 'lookup_order',
+      description: 'Find order details by order ID',
+      parameters: {
+        type: 'object',
+        properties: {
+          order_id: {
+            type: 'string',
+            description: 'The order ID to look up',
+          },
+        },
+        required: ['order_id'],
+      },
+    },
+    {
+      name: 'send_email',
+      description: 'Send an email to a customer',
+      parameters: {
+        type: 'object',
+        properties: {
+          to: { type: 'string' },
+          subject: { type: 'string' },
+          body: { type: 'string' },
+        },
+        required: ['to', 'subject', 'body'],
+      },
+    },
+  ],
+  [],
+  { model: 'gpt-4' }
+);
+```
+
+This helps Marlo's evaluation understand:
+- Which tools should have been used
+- Whether tools were called with correct parameters
+- If the agent interpreted tool outputs correctly
+
+## Best Practices
+
+### Use Consistent Tool Names
+
+Keep tool names consistent between registration and tracking:
+
+```typescript
+// Registration
+marlo.registerAgent('my-agent', '...', [
+  { name: 'lookup_order', ... },  // ✅ Consistent name
+]);
+
+// Tracking
+task.tool('lookup_order', ...);  // ✅ Matches registration
+task.tool('lookupOrder', ...);   // ❌ Different casing
+```
+
+### Include All Relevant Input
+
+Capture all inputs that affect tool behavior:
+
+```typescript
+// ✅ Good: All relevant inputs
+task.tool('search_products', {
+  query: 'laptop',
+  filters: { min_price: 500, category: 'electronics' },
+  sort_by: 'relevance',
+}, results);
+
+// ❌ Missing context
+task.tool('search_products', { query: 'laptop' }, results);
+```
+
+### Handle Sensitive Data
+
+Be mindful of sensitive data in tool inputs:
+
+```typescript
+// Consider what gets logged
+task.tool('authenticate', {
+  username: user.email,
+  password: '***',  // Mask sensitive fields
+}, { success: true });
+```

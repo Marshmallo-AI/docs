@@ -4,39 +4,165 @@ sidebar_position: 2
 
 # Getting Started
 
-## Create an account
+Get Marlo running with your agent in under 5 minutes.
 
-To create an account in Marlo:
-1. Go to **marshmallo.ai**.  
-2. Click **Get Started** and create your account.  
-3. Set up an **organization**.  
-4. Create a **project** within your organization.  
+## Create an Account
 
-> **Note:** Marlo is currently in **beta**. For early access, reach out to **hello@marshmallo.ai**. 
+1. Go to **[marshmallo.ai](https://marshmallo.ai)**
+2. Click **Get Started** and create your account
+3. Set up an **organization**
+4. Create a **project** within your organization
 
-## Create a project and get your API key
+> **Note:** Marlo is currently in **beta**. For early access, reach out to **hello@marshmallo.ai**.
 
-Follow these steps to create a project and obtain your API key:
+## Get Your API Key
 
-1. **Create a project**  
-   - Navigate to your dashboard and click **Create Project**.  
-   - A project represents a single agentic system. If you have multiple agentic systems, create one project per system.  
+1. Navigate to your dashboard and click **Create Project**
+   - A project represents a single agentic system
+   - If you have multiple agents, create one project per system
+2. Go to **Settings → Project** for your project
+3. Copy the API key displayed on this page
+4. Add it to your environment:
 
-2. **Access your API key**  
-   - Go to **Settings > Project** for the project you just created.  
-   - Copy the API key displayed on this page.  
+```bash
+export MARLO_API_KEY=your_api_key_here
+```
 
-3. **Add the API key to your environment**  
-   - Open your `.env` file in your local project.  
-   - Add the following line:  
-     ```bash
-     MARLO_API_KEY=your_api_key_here
-     ```  
-   - Save the file.  
+Or add to your `.env` file:
 
-4. **Install the Python SDK**  
-   - In your terminal, run:  
-     ```bash
-     pip install marlo-sdk
-     ```  
-   - > **Note:** Currently, Marlo supports **Python only**. TypeScript and other language SDKs are coming soon.
+```bash
+MARLO_API_KEY=your_api_key_here
+```
+
+## Install the SDK
+
+### Python
+
+```bash
+pip install marlo-sdk
+```
+
+### TypeScript
+
+```bash
+npm install @marshmallo/marlo
+```
+
+## Wrap Your Agent
+
+### Python
+
+```python
+import os
+import marlo
+from openai import OpenAI
+
+# Initialize
+marlo.init(api_key=os.getenv("MARLO_API_KEY"))
+marlo.instrument_openai()
+
+# Register your agent
+marlo.agent(
+    name="my-agent",
+    system_prompt="You are a helpful assistant.",
+    tools=[],
+    mcp=[],
+)
+
+# Wrap your agent logic
+client = OpenAI()
+
+with marlo.task(thread_id="user-123", agent="my-agent") as task:
+    task.input("What is 2 + 2?")
+    
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": "What is 2 + 2?"}]
+    )
+    
+    task.output(response.choices[0].message.content)
+
+marlo.shutdown()
+```
+
+### TypeScript
+
+```typescript
+import * as marlo from '@marshmallo/marlo';
+import OpenAI from 'openai';
+
+// Initialize
+await marlo.init(process.env.MARLO_API_KEY!);
+
+// Register your agent
+marlo.registerAgent(
+  'my-agent',
+  'You are a helpful assistant.',
+  [],
+  [],
+);
+
+// Wrap your agent logic
+const client = new OpenAI();
+
+const task = marlo.task('user-123', 'my-agent').start();
+task.input('What is 2 + 2?');
+
+const response = await client.chat.completions.create({
+  model: 'gpt-4',
+  messages: [{ role: 'user', content: 'What is 2 + 2?' }],
+});
+
+task.llm({
+  model: 'gpt-4',
+  usage: {
+    input_tokens: response.usage?.prompt_tokens || 0,
+    output_tokens: response.usage?.completion_tokens || 0,
+  },
+});
+
+task.output(response.choices[0].message.content || '');
+task.end();
+
+await marlo.shutdown();
+```
+
+## View Results
+
+After running your agent:
+
+1. Go to your project in the [Marlo dashboard](https://marshmallo.ai)
+2. Click on **Threads** to see your conversations
+3. Click into a task to see the full trace
+4. Watch as **Rewards** score your agent's performance
+5. Check **Learnings** to see guidance generated from your agent's behavior
+
+## Try Without Code: Marlo Inbox
+
+Want to see Marlo in action without integrating your own agent? Try **Marlo Inbox**, a complete email and calendar assistant that demonstrates the full learning loop.
+
+### Quick Start
+
+```bash
+git clone https://github.com/Marshmallo-AI/marlo-inbox.git
+cd marlo-inbox
+cp .env.example .env
+# Fill in your credentials in .env
+make install-all
+make dev  # Python version
+# or: make dev-ts-full  # TypeScript version
+```
+
+Open `http://localhost:5173`, sign in with Google, and start chatting. Within 10-15 interactions, you'll see learnings appear that improve the agent's behavior.
+
+See the [Marlo Inbox README](https://github.com/Marshmallo-AI/marlo-inbox) for detailed setup instructions.
+
+## What's Next?
+
+Now that you're capturing data, explore:
+
+- **[Python SDK](/sdk/python)** - Full SDK documentation for Python
+- **[TypeScript SDK](/sdk/typescript)** - Full SDK documentation for TypeScript
+- **[Tracing](/features/tracing)** - Understand what gets captured
+- **[Rewards](/features/rewards)** - How tasks are evaluated
+- **[Learnings](/features/learning)** - How guidance is generated and applied

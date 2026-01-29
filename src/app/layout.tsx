@@ -20,6 +20,7 @@ const footer = <Footer>MIT {new Date().getFullYear()} © Marshmallo.</Footer>
  
 const rootOrder = ['index', 'page', 'getting-started', 'sdk', 'features', 'agent-systems']
 const sdkOrder = ['page', 'python', 'typescript', 'http']
+const sdkSubpageOrder = ['page', 'instrumentation', 'tools', 'learnings', 'multi-agent', 'reference']
 const featuresOrder = ['page', 'tracing', 'rewards', 'learning', 'guidelines', 'copilot', 'simulation', 'reports']
 const agentSystemsOrder = ['page', 'single-agent', 'orchestrator', 'chain', 'graph']
 
@@ -48,8 +49,19 @@ const reorderPageMap = (items: PageMapItem[]): PageMapItem[] => {
   const sorted = sortItems(items, rootOrder).map((item) => {
     const key = toKey(item)
     if (!('children' in item) || !item.children || item.children.length === 0) return item
+    
     if (key === 'sdk') {
-      return { ...item, children: sortItems(item.children, sdkOrder) }
+      // Sort SDK children (python, typescript, http)
+      const sortedSdkChildren = sortItems(item.children, sdkOrder).map((sdkChild) => {
+        const sdkKey = toKey(sdkChild)
+        // Sort SDK subpages (instrumentation, tools, learnings, etc.)
+        if ((sdkKey === 'python' || sdkKey === 'typescript') && 
+            'children' in sdkChild && sdkChild.children && sdkChild.children.length > 0) {
+          return { ...sdkChild, children: sortItems(sdkChild.children, sdkSubpageOrder) }
+        }
+        return sdkChild
+      })
+      return { ...item, children: sortedSdkChildren }
     }
     if (key === 'features') {
       return { ...item, children: sortItems(item.children, featuresOrder) }

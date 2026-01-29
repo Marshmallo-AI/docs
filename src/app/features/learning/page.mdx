@@ -35,6 +35,8 @@ Each learning includes:
 - **Learning**: The guidance itself, written as a clear instruction (e.g., "Always verify order ID format before calling lookup_order").
 - **Expected Outcome**: What improvement this learning should produce (e.g., "Reduces tool call failures").
 - **Confidence**: A score between 0.0 and 1.0 indicating how reliable this learning is.
+- **Basis**: The evidence or reasoning behind the learning.
+- **Status**: Whether the learning is active, retired, or pending review.
 
 ## Fetching Learnings
 
@@ -50,14 +52,18 @@ with marlo.task(thread_id="user-123", agent="support-agent") as task:
     # Build system prompt with learnings
     system_prompt = "You are a customer support agent."
     if learnings:
-        learnings_text = learnings.get("learnings_text", "")
-        if learnings_text:
-            system_prompt += f"\n\nLearnings from past interactions:\n{learnings_text}"
+        active = learnings.get("active", [])
+        if active:
+            learnings_text = "\n".join(
+                f"- {obj['learning']}" for obj in active if obj.get("learning")
+            )
+            if learnings_text:
+                system_prompt += f"\n\nLearnings from past interactions:\n{learnings_text}"
 
     # Use system_prompt in your LLM call...
 ```
 
-The `learnings_text` field contains a formatted string of all active learnings, ready to inject into your agent's prompt. You decide where to place it: in the system prompt, as a separate context block, or anywhere else that makes sense for your agent.
+You decide where to place learnings in your agent's context: in the system prompt, as a separate context block, or anywhere else that makes sense for your agent.
 
 ## How Learnings Evolve
 
@@ -68,8 +74,105 @@ Learnings are not static. As more tasks run and more rewards are generated, Marl
 - **Refinement**: If new evidence suggests a learning should be modified, Marlo updates the guidance while preserving the learning ID.
 - **Retirement**: Learnings with very low confidence are eventually retired and no longer surfaced.
 
+## Managing Learnings in the Dashboard
+
+The dashboard provides tools to view, create, edit, and manage learnings for each agent.
+
+### Viewing Learnings
+
+1. Navigate to your project in the dashboard.
+2. Click **Learnings** in the sidebar.
+3. Filter by agent to see learnings for a specific agent.
+4. Click on a learning to see its full details, including the basis and linked tasks.
+
+### Creating a Learning Manually
+
+Sometimes you know guidance that the system hasn't discovered yet:
+
+1. Click **Create Learning** in the Learnings view.
+2. Select the target agent.
+3. Enter the learning text (clear, actionable instruction).
+4. Enter the expected outcome (what improvement this should produce).
+5. Optionally set an initial confidence score.
+6. Click **Save**.
+
+Manual learnings are marked as "User Created" and follow the same confidence evolution as auto-generated learnings.
+
+### Editing a Learning
+
+To refine or correct a learning:
+
+1. Click on the learning in the Learnings view.
+2. Click **Edit**.
+3. Update the learning text, expected outcome, or confidence.
+4. Add a note explaining the change.
+5. Click **Save**.
+
+Edits are tracked in the learning's history.
+
+### Activating and Retiring Learnings
+
+Control which learnings are surfaced to your agent:
+
+1. Click on a learning to open its details.
+2. Use the **Status** dropdown to change between:
+   - **Active**: Learning is included in `get_learnings()` responses.
+   - **Retired**: Learning is no longer surfaced but preserved for history.
+   - **Pending**: Learning is under review and not yet surfaced.
+3. Click **Save**.
+
+Bulk actions are available for managing multiple learnings at once.
+
+### Reviewing Learning Effectiveness
+
+Track how well learnings are working:
+
+1. Navigate to the **Analytics** section.
+2. View success rates for tasks that applied each learning.
+3. Identify learnings that consistently improve outcomes.
+4. Flag learnings that don't seem to help for manual review.
+
+### Exporting and Importing Learnings
+
+For sharing learnings across projects or backing up:
+
+1. In the Learnings view, click **Export**.
+2. Select the learnings to export (or export all).
+3. Download as JSON or CSV.
+
+To import:
+
+1. Click **Import** in the Learnings view.
+2. Upload your file.
+3. Review the learnings before confirming import.
+4. Duplicates are detected and skipped.
+
 ## Per-Agent Learnings
 
 Learnings are scoped to individual agents. Each agent has its own set of learnings based on its own task history. In multi-agent systems, the orchestrator, researcher, and writer each develop their own learnings independently.
 
 This means specialized agents get specialized guidance. A researcher agent learns how to search effectively, while a writer agent learns how to structure summaries clearly.
+
+## Best Practices
+
+### Writing Effective Manual Learnings
+
+- **Be specific**: "Verify order ID matches format ORD-XXXXX before calling lookup_order" is better than "Check inputs carefully".
+- **Focus on actions**: Describe what the agent should *do*, not what went wrong.
+- **Include context**: Mention when the learning applies (e.g., "When handling refund requests...").
+- **Keep it concise**: One clear instruction per learning.
+
+### Monitoring Learning Health
+
+- Review learnings monthly to retire outdated guidance.
+- Watch for conflicting learnings that might confuse the agent.
+- Track confidence scores—learnings stuck at low confidence may need editing.
+- Delete duplicate or redundant learnings to keep the context clean.
+
+### Iterating on Learnings
+
+1. Start with auto-generated learnings from low-scoring tasks.
+2. Review and refine the generated text for clarity.
+3. Test the agent to see if the learning helps.
+4. Adjust confidence based on observed results.
+5. Retire learnings that no longer apply to your agent's behavior.
